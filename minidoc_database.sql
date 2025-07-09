@@ -7,7 +7,8 @@ CREATE TABLE users (
 CREATE TABLE files (
     file_id INTEGER PRIMARY KEY AUTOINCREMENT,
     file_name TEXT NOT NULL,
-    file_content TEXT
+    file_content TEXT,
+    file_updated_at INT NOT NULL 
 );
 
 CREATE TABLE users_files (
