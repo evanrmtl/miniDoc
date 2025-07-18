@@ -31,7 +31,7 @@ export class LeafNode implements TreeNodeBase {
 
 
     insertIdAt(position: number, id: LseqIdentifier): void {
-        const pos = Math.max(1, Math.min(position + 1, this.ids.length - 1));
+        const pos = Math.max(0, Math.min(position, this.ids.length));
         this.ids.splice(pos, 0, id);
     }
 

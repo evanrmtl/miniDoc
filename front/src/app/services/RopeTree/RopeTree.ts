@@ -16,12 +16,10 @@ export class RopeTree {
     public root: TreeNode | null = null;
 
     constructor() {
-        const startSentinel = new LeafNode();
-        startSentinel.addId(SENT_START.path, 'sentinel-start');
-        const endSentinel = new LeafNode();
-        endSentinel.addId(SENT_END.path, 'sentinel-end');
-
-        this.root = new InternalNode(startSentinel, endSentinel);
+        const leaf = new LeafNode();
+        leaf.addId(SENT_START.path, 'sentinel-start');
+        leaf.addId(SENT_END.path, 'sentinel-end');
+        this.root = leaf;
     }
 
     getInsertIds(treeRoot: TreeNode, position: number): { p: LseqIdentifier | null, q: LseqIdentifier | null} {
@@ -86,15 +84,17 @@ export class RopeTree {
 
     private insertRec(node: TreeNode, id: LseqIdentifier, position: number): TreeNode {
         if (node instanceof LeafNode) {
-            node.insertIdAt(position, id);
-            if (node.length > node.MAX_LENGTH) {
+            node.insertIdOrdered(id);
+            if (node.length <= node.MAX_LENGTH) {
+                return node;
+            } else {
                 const { leftLeaf, rightLeaf } = node.split();
                 return new InternalNode(leftLeaf, rightLeaf);
             }
-            return node;
         }
         if (node instanceof InternalNode) {
-            if (position < node.left.length) {
+            const leftMaxId = this.getLastIdInSubtree(node.left);
+            if (!leftMaxId || id.compare(leftMaxId) < 0) {
                 node.left = this.insertRec(node.left, id, position);
             } else {
                 node.right = this.insertRec(node.right, id, position - node.left.length);
@@ -103,6 +103,17 @@ export class RopeTree {
             return node;
         }
         throw new Error("Invalid node type in insertRec");
+    }
+
+    private getLastIdInSubtree(node: TreeNode): LseqIdentifier | null {
+        if (node instanceof LeafNode) {
+            return node.ids[node.ids.length - 1] || null;
+        }
+        if (node instanceof InternalNode) {
+            const rightLastId = this.getLastIdInSubtree(node.right);
+            return rightLastId || this.getLastIdInSubtree(node.left);
+        }
+        throw new Error("Invalid node type in getLastIdInSubtree");
     }
 
     insert(id: LseqIdentifier, position: number): void {

@@ -3,6 +3,7 @@ import { RopeTree } from '../RopeTree/RopeTree';
 import { LSEQ } from '../CRDT/LSEQ';
 import { LseqIdentifier } from '../CRDT/LseqIdentifier';
 import { LseqAtom } from '../CRDT/LseqAtom';
+import { LeafNode } from '../RopeTree/LeafNode';
 
 @Component({
   selector: 'app-rich-text-editor',
@@ -23,19 +24,25 @@ export class RichTextEditorComponent implements OnInit {
     // Initialize the rich text editor
   }
 
-  insertCharAtPosition(position : number, char: string){
+  insertCharAtPosition(position: number, char: string) {
+    console.log(`DOM position: ${position}`);
+    const adjustedPosition = position + 1;
+    console.log(`Adjusted position: ${adjustedPosition}`);
+    
     if (this.ropeTree.root) {
-      
-      const {p, q} = this.ropeTree.getInsertIds(this.ropeTree.root, position);
+      const {p, q} = this.ropeTree.getInsertIds(this.ropeTree.root, adjustedPosition);
+      console.log(`p:`, p, `q:`, q);
       const safeP = isValidIdPath(p?.path) ? p!.path : null;
       const safeQ = isValidIdPath(q?.path) ? q!.path : null;
       const id = this.lseq.alloc(safeP, safeQ);
       this.lseq.insert(id, char);
+      
+      this.ropeTree.insert(id, adjustedPosition);
       console.log(`Inserting char "${char}" at position ${position} with id:`, id);
       console.log(this.ropeTree.printTree());
-      this.ropeTree.insert( id, position);
     }
   }
+
 
   onInput($event : any) {
     const position = this.getCaretPosition();
@@ -58,9 +65,13 @@ export class RichTextEditorComponent implements OnInit {
   getEditorDiv(): HTMLElement {
     return document.querySelector('.rich-text-editor') as HTMLElement;
   }
- 
 }
 
 function isValidIdPath(arr: number[] | undefined | null): arr is number[] {
-  return Array.isArray(arr) && arr.length > 0 && arr.every(Number.isFinite);
-}
+    if (!Array.isArray(arr) || arr.length === 0) return false;
+    
+    if (arr[0] === -Infinity || arr[0] === Infinity) return true;
+    
+    return arr.every(Number.isFinite);
+  }
+

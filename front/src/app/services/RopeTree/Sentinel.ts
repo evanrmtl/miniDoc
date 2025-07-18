@@ -1,4 +1,4 @@
 import { LseqIdentifier } from "./../CRDT/LseqIdentifier";
 
-export const SENT_START = new LseqIdentifier([-Infinity], "sentinel-start");
-export const SENT_END   = new LseqIdentifier([Infinity], "sentinel-end");
+export const SENT_START = new LseqIdentifier([0], "sentinel-start");
+export const SENT_END   = new LseqIdentifier([1000000], "sentinel-end");

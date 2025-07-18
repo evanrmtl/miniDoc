@@ -1,12 +1,15 @@
 import { LseqIdentifier } from './LseqIdentifier';
 import { LseqAtom } from './LseqAtom';
 import { RopeTree } from '../RopeTree/RopeTree';
+import { NgOptimizedImage } from '@angular/common';
+import { SENT_END, SENT_START } from '../RopeTree/Sentinel';
+import { LeafNode } from '../RopeTree/LeafNode';
 
 
 export class LSEQ {
 
     public bpbm: Map<number, boolean>;
-    public boundary: number = 10000;
+    public boundary: number = 1000;
     
 
     constructor() {
@@ -14,22 +17,24 @@ export class LSEQ {
     }
 
     insert(id: LseqIdentifier, value: string): LseqAtom {
+        console.error("Inserting value:", value, "with id:", id);
         return new LseqAtom(id, value);
     }
 
 
     alloc(p: number[] | null = null, q: number[]| null = null): LseqIdentifier {
 
-        if (!p) p = [Number.MIN_SAFE_INTEGER];
-        if (!q) q = [Number.MAX_SAFE_INTEGER];
+        if (!p) p = [SENT_START.path[0]];
+        if (!q) q = [SENT_END.path[0]];
 
         let depth = 0;
         let interval = 0
         while (interval < 1){
             depth++;
-            const prefixP = this.prefix(p, depth);
-            const prefixQ = this.prefix(q, depth);
+            const prefixP = this.prefix(p, depth, SENT_START.path[0]);
+            const prefixQ = this.prefix(q, depth, SENT_END.path[0]);
             interval = prefixQ[depth - 1] - prefixP[depth - 1] - 1;
+
         }
         let step = Math.min(this.boundary, interval);
 
@@ -37,27 +42,34 @@ export class LSEQ {
             this.bpbm.set(depth, Math.random() >= 0.5);
         }
 
-        let newDigits = this.prefix(p, depth);
+        let newDigits = this.prefix(p, depth, SENT_START.path[0]);
 
         if (this.bpbm.get(depth)) {
             let addVal = Math.floor(Math.random() * step) + 1;
             newDigits[depth - 1] = newDigits[depth - 1] + addVal;
         } else {
             let subVal = Math.floor(Math.random() * step) + 1;
-            let prefixQ = this.prefix(q, depth);
+            let prefixQ = this.prefix(q, depth, SENT_END.path[0]);
+            console.error("prefixQ:", prefixQ);
             newDigits[depth - 1] = prefixQ[depth - 1] - subVal;
+            console.warn("newDigits:", newDigits);
+        }
+
+        if (newDigits.some(val => isNaN(val))) {
+            console.error("Generated NaN in path:", newDigits);
+            throw new Error("Invalid path generated");
         }
 
         return new LseqIdentifier(newDigits, 'client-id');
     }
 
-    prefix(id : number[], depth: number): number[] {
+    prefix(id : number[], depth: number, pushValue : number): number[]{
         const idCopy = [];
         for (let i = 0; i < depth; i++) {
             if (i < id.length) {
                 idCopy.push(id[i]);
             } else {
-                idCopy.push(0);
+                idCopy.push(pushValue);
             }
         }
         return idCopy;
