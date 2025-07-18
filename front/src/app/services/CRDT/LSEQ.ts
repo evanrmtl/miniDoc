@@ -1,26 +1,46 @@
 import { LseqIdentifier } from './LseqIdentifier';
 import { LseqAtom } from './LseqAtom';
-import { RopeTree } from '../RopeTree/RopeTree';
-import { NgOptimizedImage } from '@angular/common';
 import { SENT_END, SENT_START } from '../RopeTree/Sentinel';
-import { LeafNode } from '../RopeTree/LeafNode';
 
 
 export class LSEQ {
 
     public bpbm: Map<number, boolean>;
     public boundary: number = 1000;
-    
+    public atoms: LseqAtom[] = [];
+
 
     constructor() {
         this.bpbm = new Map<number, boolean>();
     }
 
     insert(id: LseqIdentifier, value: string): LseqAtom {
-        console.error("Inserting value:", value, "with id:", id);
-        return new LseqAtom(id, value);
+        const atom = new LseqAtom(id, value);
+        this.addAtom(atom);
+        return atom;
     }
 
+    addAtom(atom: LseqAtom): void {
+        const index = this.atoms.findIndex(a => {
+            for (let i = 0; i < Math.min(a.id.path.length, atom.id.path.length); i++) {
+                if (atom.id.path[i] < a.id.path[i]) return true;
+                if (atom.id.path[i] > a.id.path[i]) return false;
+            }
+            return atom.id.path.length < a.id.path.length;
+        });
+        if (index === -1) {
+            this.atoms.push(atom);
+        } else {
+            this.atoms.splice(index, 0, atom);
+        }
+    }
+
+    delete(id: LseqIdentifier): void {
+        const index = this.atoms.findIndex(atom => atom.id.compare(id) === 0);
+        if (index !== -1) {
+            this.atoms.splice(index, 1);
+        }
+    }
 
     alloc(p: number[] | null = null, q: number[]| null = null): LseqIdentifier {
 
@@ -50,9 +70,7 @@ export class LSEQ {
         } else {
             let subVal = Math.floor(Math.random() * step) + 1;
             let prefixQ = this.prefix(q, depth, SENT_END.path[0]);
-            console.error("prefixQ:", prefixQ);
             newDigits[depth - 1] = prefixQ[depth - 1] - subVal;
-            console.warn("newDigits:", newDigits);
         }
 
         if (newDigits.some(val => isNaN(val))) {
@@ -73,5 +91,9 @@ export class LSEQ {
             }
         }
         return idCopy;
+    }
+
+    printString(): string {
+        return this.atoms.map(atom => atom.value).join('');
     }
 }

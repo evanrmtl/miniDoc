@@ -122,17 +122,35 @@ export class RopeTree {
         }
         this.root = this.insertRec(this.root, id, position);
     }
-    
-    printTree(node: TreeNode | null = this.root, depth: number = 0): string {
-        if (!node) return '';
-        let result = '';
-        if (node instanceof LeafNode) {
-            result += ' '.repeat(depth * 2) + 'LeafNode: ' + node.ids.map(id => '[clientId: ' + id.clientId + ', path: ' + id.path + ']').join(', ') + '\n';
-        } else if (node instanceof InternalNode) {
-            result += ' '.repeat(depth * 2) + 'InternalNode:\n';
-            result += this.printTree(node.left, depth + 1);
-            result += this.printTree(node.right, depth + 1);
+
+    delete(id: LseqIdentifier, position: number): void {
+        if (!this.root) {
+            throw new Error("Illegal state: root should always be present");
         }
-        return result;
+        const search = this.searchInTree(this.root, position);
+        if (!search) {
+            console.warn("No leaf found at position:", position);
+            return;
+        }
+        const leaf = search.leaf;
+        const index = leaf.ids.findIndex(atom => atom.compare(id) === 0);
+        if (index !== -1) {
+            leaf.ids.splice(index, 1);
+        } else {
+            console.warn("Atom with id not found in leaf at position:", position);
+        }
+    }
+
+    printTree(node: TreeNode | null = this.root, depth: number = 0): void {
+        if (!node) return;
+        if (node instanceof LeafNode) {
+            console.log(' '.repeat(depth * 2) + `Leaf: ${node.ids.map(id => id.path.join('.')).join(', ')}`);
+        } else if (node instanceof InternalNode) {
+            console.log(' '.repeat(depth * 2) + `Internal Node:`);
+            this.printTree(node.left, depth + 1);
+            this.printTree(node.right, depth + 1);
+        } else {
+            throw new Error("Invalid node type in printTree");
+        }
     }
 }

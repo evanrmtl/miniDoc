@@ -25,24 +25,41 @@ export class RichTextEditorComponent implements OnInit {
   }
 
   insertCharAtPosition(position: number, char: string) {
-    console.log(`DOM position: ${position}`);
     const adjustedPosition = position + 1;
-    console.log(`Adjusted position: ${adjustedPosition}`);
     
     if (this.ropeTree.root) {
       const {p, q} = this.ropeTree.getInsertIds(this.ropeTree.root, adjustedPosition);
-      console.log(`p:`, p, `q:`, q);
       const safeP = isValidIdPath(p?.path) ? p!.path : null;
       const safeQ = isValidIdPath(q?.path) ? q!.path : null;
       const id = this.lseq.alloc(safeP, safeQ);
       this.lseq.insert(id, char);
-      
       this.ropeTree.insert(id, adjustedPosition);
-      console.log(`Inserting char "${char}" at position ${position} with id:`, id);
-      console.log(this.ropeTree.printTree());
+      console.log(this.lseq.printString()); // For debugging, prints the current string representation of LSEQ
+      console.log(this.ropeTree.printTree(this.ropeTree.root)); // For debugging, prints the current tree structure
     }
   }
 
+
+  deleteCharAtPosition(position: number) {
+    const adjustedPosition = position + 1;
+    if(this.ropeTree.root === null) throw new Error("RopeTree root is null");
+    const idToDelete = this.ropeTree.getInsertIds(this.ropeTree.root, adjustedPosition).p;
+    if (idToDelete) {
+      this.lseq.delete(idToDelete);
+      this.ropeTree.delete(idToDelete, adjustedPosition);
+      console.log(this.lseq.printString()); // For debugging, prints the current string representation of LSEQ
+      console.log(this.ropeTree.printTree(this.ropeTree.root)); // For debugging, prints the current tree structure
+    }
+  }
+
+
+
+  onKeyInput($event : KeyboardEvent) {
+    const key = $event.key;
+    if (key === 'Backspace' || key === 'Delete') {
+      this.deleteCharAtPosition(this.getCaretPosition());
+    }
+  }
 
   onInput($event : any) {
     const position = this.getCaretPosition();
