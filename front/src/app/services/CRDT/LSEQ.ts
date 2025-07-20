@@ -22,11 +22,7 @@ export class LSEQ {
 
     addAtom(atom: LseqAtom): void {
         const index = this.atoms.findIndex(a => {
-            for (let i = 0; i < Math.min(a.id.path.length, atom.id.path.length); i++) {
-                if (atom.id.path[i] < a.id.path[i]) return true;
-                if (atom.id.path[i] > a.id.path[i]) return false;
-            }
-            return atom.id.path.length < a.id.path.length;
+            return atom.id.compare(a.id) < 0;
         });
         if (index === -1) {
             this.atoms.push(atom);

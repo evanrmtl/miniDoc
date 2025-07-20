@@ -2,10 +2,8 @@ import { LseqIdentifier } from '../CRDT/LseqIdentifier';
 import { InternalNode } from './InternalNode';
 import { LeafNode } from './LeafNode';
 import { TreeNode } from './TypeTree';
-import { LSEQ } from '../CRDT/LSEQ';
 import { SENT_END } from './Sentinel';
 import { SENT_START } from './Sentinel';
-import { NgModuleRef } from '@angular/core';
 
 /**
  * RopeTree is a data structure that allows efficient text editing operations.
@@ -34,7 +32,8 @@ export class RopeTree {
         } else { //case 2: position = 0
             if (search.offset === 0){
                 let previLeaf = this.searchInTree(treeRoot, position - 1);
-                if (previLeaf && previLeaf.leaf.ids.length > 0) {
+                if (previLeaf && previLeaf.leaf.ids.length > 0 && 
+                    previLeaf.offset >= 0 && previLeaf.offset < previLeaf.leaf.ids.length) {
                     return {
                         p: previLeaf.leaf.ids[previLeaf.leaf.ids.length - 1] || null,
                         q: search.leaf.ids[0] || null
@@ -46,7 +45,7 @@ export class RopeTree {
                 };
             } else if (search.offset === search.leaf.length) { //cas 3: position = length
                 let nextLeaf = this.searchInTree(treeRoot, position + 1);
-                if (nextLeaf && nextLeaf.leaf.ids.length > 0) {
+                if (nextLeaf && nextLeaf.offset < nextLeaf.leaf.ids.length) {
                     return {
                         p: search.leaf.ids[search.leaf.ids.length - 1] || null,
                         q: nextLeaf.leaf.ids[0] || null
@@ -66,6 +65,14 @@ export class RopeTree {
         }
         // Default return to satisfy all code paths
         return { p: null, q: null };
+    }
+
+    getDeleteIds(treeRoot: TreeNode, position: number): LseqIdentifier | null {
+        const search = this.searchInTree(treeRoot, position);
+        if (search && search.leaf.ids.length > 0) {
+            return search.leaf.getIdAtOffset(search.offset);
+        }
+        return null;
     }
 
     searchInTree(node: TreeNode, position: number): { leaf: LeafNode, offset: number } | null {
@@ -129,6 +136,11 @@ export class RopeTree {
         }
         const search = this.searchInTree(this.root, position);
         if (!search) {
+            console.warn("No leaf found at position:", position);
+            return;
+        }
+
+        if (search.offset < 0 || search.offset >= search.leaf.ids.length) {
             console.warn("No leaf found at position:", position);
             return;
         }

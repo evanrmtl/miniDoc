@@ -7,7 +7,6 @@ import { LeafNode } from '../RopeTree/LeafNode';
 
 @Component({
   selector: 'app-rich-text-editor',
-  imports: [],
   templateUrl: './rich-text-editor.component.html',
   styleUrl: './rich-text-editor.component.scss',
 })
@@ -43,7 +42,7 @@ export class RichTextEditorComponent implements OnInit {
   deleteCharAtPosition(position: number) {
     const adjustedPosition = position + 1;
     if(this.ropeTree.root === null) throw new Error("RopeTree root is null");
-    const idToDelete = this.ropeTree.getInsertIds(this.ropeTree.root, adjustedPosition).p;
+    const idToDelete = this.ropeTree.getDeleteIds(this.ropeTree.root, adjustedPosition);
     if (idToDelete) {
       this.lseq.delete(idToDelete);
       this.ropeTree.delete(idToDelete, adjustedPosition);
@@ -84,7 +83,7 @@ export class RichTextEditorComponent implements OnInit {
   }
 }
 
-function isValidIdPath(arr: number[] | undefined | null): arr is number[] {
+export function isValidIdPath(arr: number[] | undefined | null): arr is number[] {
     if (!Array.isArray(arr) || arr.length === 0) return false;
     
     if (arr[0] === -Infinity || arr[0] === Infinity) return true;

@@ -15,6 +15,4 @@ class StyleRun {
         this.style = style;
         this.author = author;
     }
-
-    
 }
