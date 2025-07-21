@@ -1,7 +1,16 @@
 CREATE TABLE users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE CHECK(length(username) <= 25),
-    password_hash TEXT NOT NULL
+    password_hash TEXT NOT NULL,
+    counter INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE session (
+    session_id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE files (
