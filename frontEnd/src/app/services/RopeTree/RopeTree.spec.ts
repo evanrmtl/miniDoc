@@ -43,7 +43,7 @@ describe('RopeTree', () => {
         it('should navigate through internal nodes', () => {
             // Create a tree structure by inserting many elements
             for (let i = 0; i < 300; i++) { // Force split
-                ropeTree.insert(new LseqIdentifier([100 + i], 'client'), i + 1);
+                ropeTree.root = ropeTree.insert(ropeTree.root!, new LseqIdentifier([i], 'client'));
             }
             
             // Root should now be InternalNode
@@ -90,7 +90,7 @@ describe('RopeTree', () => {
 
         it('should handle position in middle', () => {
             // Add element between sentinels
-            ropeTree.insert(new LseqIdentifier([500], 'client'), 1);
+            ropeTree.insert(ropeTree.root!, new LseqIdentifier([500], 'client'));
             
             const result = ropeTree.getInsertIds(ropeTree.root!, 1);
             
@@ -101,10 +101,10 @@ describe('RopeTree', () => {
 
         it('should handle complex tree navigation', () => {
             // Insert multiple elements
-            ropeTree.insert(new LseqIdentifier([100], 'client'), 1);
-            ropeTree.insert(new LseqIdentifier([200], 'client'), 2);
-            ropeTree.insert(new LseqIdentifier([300], 'client'), 3);
-            
+            ropeTree.insert(ropeTree.root!, new LseqIdentifier([100], 'client'));
+            ropeTree.insert(ropeTree.root!, new LseqIdentifier([200], 'client'));
+            ropeTree.insert(ropeTree.root!, new LseqIdentifier([300], 'client'));
+
             const result = ropeTree.getInsertIds(ropeTree.root!, 2);
             
             expect(result.p).toBeTruthy();
@@ -126,7 +126,7 @@ describe('RopeTree', () => {
         it('should return correct ID at position', () => {
             // Insert an element
             const testId = new LseqIdentifier([500], 'client');
-            ropeTree.insert(testId, 1);
+            ropeTree.insert(ropeTree.root!, testId);
             
             const result = ropeTree.getDeleteIds(ropeTree.root!, 1);
             
@@ -143,19 +143,12 @@ describe('RopeTree', () => {
     });
 
     describe('insert', () => {
-        it('should throw error when root is null', () => {
-            ropeTree.root = null;
-            
-            expect(() => ropeTree.insert(new LseqIdentifier([1], 'client'), 0))
-                .toThrowError("Illegal state: root should always be present (initialized with sentinels)");
-        });
-
         it('should insert into leaf node successfully', () => {
             const testId = new LseqIdentifier([500], 'client');
             const initialLength = (ropeTree.root as LeafNode).length;
-            
-            ropeTree.insert(testId, 1);
-            
+
+            ropeTree.insert(ropeTree.root!, testId);
+
             const leafRoot = ropeTree.root as LeafNode;
             expect(leafRoot.length).toBe(initialLength + 1);
             
@@ -167,7 +160,7 @@ describe('RopeTree', () => {
         it('should trigger split when leaf exceeds MAX_LENGTH', () => {
             // Insert enough elements to force a split
             for (let i = 0; i < 260; i++) {
-                ropeTree.insert(new LseqIdentifier([100 + i], `client-${i}`), i + 1);
+                ropeTree.root = ropeTree.insert(ropeTree.root!, new LseqIdentifier([100 + i], `client-${i}`));
             }
             
             // Root should now be InternalNode due to split
@@ -183,7 +176,7 @@ describe('RopeTree', () => {
             ];
             
             ids.forEach((id, index) => {
-                ropeTree.insert(id, index + 1);
+                ropeTree.insert(ropeTree.root!, id);
             });
             
             // Check that order is maintained (sentinels + inserted elements)
@@ -200,27 +193,28 @@ describe('RopeTree', () => {
     describe('delete', () => {
         beforeEach(() => {
             // Setup some test data
-            ropeTree.insert(new LseqIdentifier([100], 'client-a'), 1);
-            ropeTree.insert(new LseqIdentifier([200], 'client-b'), 2);
-            ropeTree.insert(new LseqIdentifier([300], 'client-c'), 3);
+            ropeTree.root = ropeTree.insert(ropeTree.root!, new LseqIdentifier([100], 'client-a'));
+            ropeTree.root = ropeTree.insert(ropeTree.root!, new LseqIdentifier([200], 'client-b'));
+            ropeTree.root = ropeTree.insert(ropeTree.root!, new LseqIdentifier([300], 'client-c'));
         });
 
         it('should throw error when root is null', () => {
             ropeTree.root = null;
-            
-            expect(() => ropeTree.delete(new LseqIdentifier([1], 'client'), 0))
-                .toThrowError("Illegal state: root should always be present");
+
+            expect(() => ropeTree.delete(new LseqIdentifier([1], 'client'))).toThrowError(
+            "Illegal state: root should always be present"
+            );
         });
 
         it('should delete existing element successfully', () => {
             const targetId = new LseqIdentifier([200], 'client-b');
             const initialLength = (ropeTree.root as LeafNode).length;
-            
-            ropeTree.delete(targetId, 2);
-            
+
+            ropeTree.delete(targetId);
+
             const leafRoot = ropeTree.root as LeafNode;
             expect(leafRoot.length).toBe(initialLength - 1);
-            
+
             // Verify element is gone
             const found = leafRoot.ids.find(id => id.compare(targetId) === 0);
             expect(found).toBeUndefined();
@@ -229,23 +223,24 @@ describe('RopeTree', () => {
         it('should handle deletion of non-existent element gracefully', () => {
             const nonExistentId = new LseqIdentifier([999], 'client-unknown');
             const initialLength = (ropeTree.root as LeafNode).length;
-            
+
             spyOn(console, 'warn');
-            ropeTree.delete(nonExistentId, 2);
-            
-            expect(console.warn).toHaveBeenCalledWith("Atom with id not found in leaf at position:", 2);
+            ropeTree.delete(nonExistentId);
+
+            expect(console.warn).toHaveBeenCalledWith("Atom with id not found in any leaf");
             expect((ropeTree.root as LeafNode).length).toBe(initialLength);
         });
 
-        it('should handle invalid position gracefully', () => {
-            const targetId = new LseqIdentifier([999], 'client-a');
-            
+        it('should handle empty tree gracefully', () => {
+            ropeTree.root = null;
+
             spyOn(console, 'warn');
-            ropeTree.delete(targetId, 999);
-            
-            expect(console.warn).toHaveBeenCalledWith("No leaf found at position:", 999);
+            expect(() => ropeTree.delete(new LseqIdentifier([999], 'client-a'))).toThrowError(
+            "Illegal state: root should always be present"
+            );
         });
     });
+
 
     describe('getLastIdInSubtree', () => {
         it('should return last ID from leaf node', () => {
@@ -274,7 +269,8 @@ describe('RopeTree', () => {
             const internalNode = new InternalNode(leftLeaf, rightLeaf);
             
             const lastId = (ropeTree as any).getLastIdInSubtree(internalNode);
-            
+            console.log("Last ID in subtree:", lastId);
+
             expect(lastId).toBeTruthy();
             expect(lastId.path).toEqual([200]);
         });
@@ -287,85 +283,51 @@ describe('RopeTree', () => {
         });
     });
 
-    describe('printTree', () => {
-        it('should print leaf node correctly', () => {
-            spyOn(console, 'log');
-            
-            ropeTree.printTree();
-            
-            expect(console.log).toHaveBeenCalled();
-            const call = (console.log as jasmine.Spy).calls.mostRecent();
-            expect(call.args[0]).toContain('Leaf:');
-        });
-
-        it('should print internal node structure', () => {
-            // Force creation of internal structure
-            for (let i = 0; i < 300; i++) {
-                ropeTree.insert(new LseqIdentifier([100 + i], 'client'), i + 1);
-            }
-            
-            spyOn(console, 'log');
-            ropeTree.printTree();
-            
-            expect(console.log).toHaveBeenCalled();
-            const calls = (console.log as jasmine.Spy).calls.all();
-            const hasInternalNode = calls.some(call => call.args[0].includes('Internal Node'));
-            expect(hasInternalNode).toBe(true);
-        });
-
-        it('should handle null root gracefully', () => {
-            ropeTree.root = null;
-            
-            expect(() => ropeTree.printTree()).not.toThrow();
-        });
-
-        it('should throw error for invalid node type in print', () => {
-            ropeTree.root = {} as any;
-            
-            expect(() => ropeTree.printTree())
-                .toThrowError("Invalid node type in printTree");
-        });
-    });
-
     describe('Integration scenarios', () => {
+
         it('should handle complete text editing workflow', () => {
             // Insert characters to spell "HELLO"
             const chars = [
-                { id: new LseqIdentifier([100], 'client'), pos: 1 },
-                { id: new LseqIdentifier([200], 'client'), pos: 2 },
-                { id: new LseqIdentifier([300], 'client'), pos: 3 },
-                { id: new LseqIdentifier([400], 'client'), pos: 4 },
-                { id: new LseqIdentifier([500], 'client'), pos: 5 }
+            new LseqIdentifier([100], 'client'),
+            new LseqIdentifier([200], 'client'),
+            new LseqIdentifier([300], 'client'),
+            new LseqIdentifier([400], 'client'),
+            new LseqIdentifier([500], 'client')
             ];
-            
-            chars.forEach(({id, pos}) => {
-                ropeTree.insert(id, pos);
+
+            chars.forEach(id => {
+            ropeTree.root = ropeTree.insert(ropeTree.root!, id);
             });
-            
+
             expect((ropeTree.root as LeafNode).length).toBe(7); // 2 sentinels + 5 chars
-            
-            // Delete middle character
-            ropeTree.delete(chars[2].id, 4); // Delete 3rd character
-            
+
+            // Delete middle character ("[300]:client")
+            ropeTree.delete(chars[2]);
+
             expect((ropeTree.root as LeafNode).length).toBe(6);
+            // Verify it's gone
+            const found = (ropeTree.root as LeafNode).ids.find(id => id.compare(chars[2]) === 0);
+            expect(found).toBeUndefined();
         });
 
         it('should maintain performance with many operations', () => {
             const startTime = performance.now();
-            
+
             // Insert 100 elements
             for (let i = 0; i < 100; i++) {
-                ropeTree.insert(new LseqIdentifier([1000 + i], `client-${i}`), i + 1);
+            ropeTree.root = ropeTree.insert(ropeTree.root!, new LseqIdentifier([1000 + i], `client-${i}`));
             }
-            
+
             // Delete some elements
             for (let i = 0; i < 20; i++) {
-                ropeTree.delete(new LseqIdentifier([1000 + i], `client-${i}`), 1);
+            ropeTree.delete(new LseqIdentifier([1000 + i], `client-${i}`));
             }
-            
+
             const endTime = performance.now();
-            
+
             expect(endTime - startTime).toBeLessThan(1000); // Should complete within 1 second
         });
+
     });
+
 });

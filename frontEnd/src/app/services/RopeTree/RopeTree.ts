@@ -89,7 +89,7 @@ export class RopeTree {
         throw new Error("Invalid tree structure");
     }
 
-    private insertRec(node: TreeNode, id: LseqIdentifier, position: number): TreeNode {
+    public insert(node: TreeNode, id: LseqIdentifier): TreeNode {
         if (node instanceof LeafNode) {
             node.insertIdOrdered(id);
             if (node.length <= node.MAX_LENGTH) {
@@ -102,9 +102,9 @@ export class RopeTree {
         if (node instanceof InternalNode) {
             const leftMaxId = this.getLastIdInSubtree(node.left);
             if (!leftMaxId || id.compare(leftMaxId) < 0) {
-                node.left = this.insertRec(node.left, id, position);
+                node.left = this.insert(node.left, id);
             } else {
-                node.right = this.insertRec(node.right, id, position - node.left.length);
+                node.right = this.insert(node.right, id);
             }
             node.length = node.left.length + node.right.length;
             return node;
@@ -123,46 +123,39 @@ export class RopeTree {
         throw new Error("Invalid node type in getLastIdInSubtree");
     }
 
-    insert(id: LseqIdentifier, position: number): void {
-        if (!this.root) {
-            throw new Error("Illegal state: root should always be present (initialized with sentinels)");
-        }
-        this.root = this.insertRec(this.root, id, position);
-    }
-
-    delete(id: LseqIdentifier, position: number): void {
+    delete(id: LseqIdentifier): void {
         if (!this.root) {
             throw new Error("Illegal state: root should always be present");
         }
-        const search = this.searchInTree(this.root, position);
-        if (!search) {
-            console.warn("No leaf found at position:", position);
+        
+        const leaf = this.findLeafContainingId(this.root, id);
+        
+        if (!leaf) {
+            console.warn("Atom with id not found in any leaf");
             return;
         }
-
-        if (search.offset < 0 || search.offset >= search.leaf.ids.length) {
-            console.warn("No leaf found at position:", position);
-            return;
-        }
-        const leaf = search.leaf;
-        const index = leaf.ids.findIndex(atom => atom.compare(id) === 0);
+        
+        const index = leaf.ids.findIndex(atomId => atomId.compare(id) === 0);
         if (index !== -1) {
             leaf.ids.splice(index, 1);
         } else {
-            console.warn("Atom with id not found in leaf at position:", position);
+            console.warn("Atom with id not found in leaf");
         }
     }
 
-    printTree(node: TreeNode | null = this.root, depth: number = 0): void {
-        if (!node) return;
+
+    findLeafContainingId(node: TreeNode, id: LseqIdentifier): LeafNode | null {
         if (node instanceof LeafNode) {
-            console.log(' '.repeat(depth * 2) + `Leaf: ${node.ids.map(id => id.path.join('.')).join(', ')}`);
-        } else if (node instanceof InternalNode) {
-            console.log(' '.repeat(depth * 2) + `Internal Node:`);
-            this.printTree(node.left, depth + 1);
-            this.printTree(node.right, depth + 1);
-        } else {
-            throw new Error("Invalid node type in printTree");
+            if (node.ids.some(atomId => atomId.compare(id) === 0)) {
+            return node;
+            }
+            return null;
         }
+        if (node instanceof InternalNode) {
+            const leftResult = this.findLeafContainingId(node.left, id);
+            if (leftResult !== null) return leftResult;
+            return this.findLeafContainingId(node.right, id);
+        }
+        return null;
     }
 }
