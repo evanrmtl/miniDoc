@@ -32,9 +32,7 @@ export class RichTextEditorComponent implements OnInit {
       const safeQ = isValidIdPath(q?.path) ? q!.path : null;
       const id = this.lseq.alloc(safeP, safeQ);
       this.lseq.insert(id, char);
-      this.ropeTree.insert(id, adjustedPosition);
-      console.log(this.lseq.printString()); // For debugging, prints the current string representation of LSEQ
-      console.log(this.ropeTree.printTree(this.ropeTree.root)); // For debugging, prints the current tree structure
+      this.ropeTree.root = this.ropeTree.insert(this.ropeTree.root, id);
     }
   }
 
@@ -45,12 +43,9 @@ export class RichTextEditorComponent implements OnInit {
     const idToDelete = this.ropeTree.getDeleteIds(this.ropeTree.root, adjustedPosition);
     if (idToDelete) {
       this.lseq.delete(idToDelete);
-      this.ropeTree.delete(idToDelete, adjustedPosition);
-      console.log(this.lseq.printString()); // For debugging, prints the current string representation of LSEQ
-      console.log(this.ropeTree.printTree(this.ropeTree.root)); // For debugging, prints the current tree structure
+      this.ropeTree.delete(idToDelete);
     }
   }
-
 
 
   onKeyInput($event : KeyboardEvent) {
