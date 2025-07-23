@@ -11,6 +11,8 @@ func CreateRoutes(db *gorm.DB) *gin.Engine {
 	router.POST("/register", func(c *gin.Context) {
 		auth.RegisterController(c, db)
 	})
-
+	router.POST("/login", func(c *gin.Context) {
+		auth.LoginController(c, db)
+	})
 	return router
 }
