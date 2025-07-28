@@ -1,0 +1,23 @@
+
+<form (submit)="onSubmit()">
+
+    <label>Username</label>
+    <input 
+    type="text"
+    id="username"
+    name="username"
+    required
+    minlength="3"
+    maxlength="20"
+    [(ngModel)]="username"
+    />
+
+    <label>Password</label>
+    <input 
+    type="password"
+    id="password"
+    name="password"
+    [(ngModel)]="password"
+    />
+    <button type="submit">{{ buttonName }}</button>
+</form>

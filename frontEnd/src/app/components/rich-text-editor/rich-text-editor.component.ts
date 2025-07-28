@@ -1,9 +1,9 @@
 import { Component, createEnvironmentInjector, OnInit } from '@angular/core';
-import { RopeTree } from '../RopeTree/RopeTree';
-import { LSEQ } from '../CRDT/LSEQ';
-import { LseqIdentifier } from '../CRDT/LseqIdentifier';
-import { LseqAtom } from '../CRDT/LseqAtom';
-import { LeafNode } from '../RopeTree/LeafNode';
+import { RopeTree } from '../../services/RopeTree/RopeTree';
+import { LSEQ } from '../../services/CRDT/LSEQ';
+import { LseqIdentifier } from '../../services/CRDT/LseqIdentifier';
+import { LseqAtom } from '../../services/CRDT/LseqAtom';
+import { LeafNode } from '../../services/RopeTree/LeafNode';
 
 @Component({
   selector: 'app-rich-text-editor',
