@@ -1,6 +1,6 @@
-import { LseqIdentifier } from './LseqIdentifier';
-import { LseqAtom } from './LseqAtom';
-import { SENT_END, SENT_START } from '../RopeTree/Sentinel';
+import { LseqIdentifier } from './LseqIdentifier.service';
+import { LseqAtom } from './LseqAtom.service';
+import { SENT_END, SENT_START } from '../RopeTree/Sentinel.service';
 
 
 export class LSEQ {

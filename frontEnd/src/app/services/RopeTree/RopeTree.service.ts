@@ -1,9 +1,9 @@
-import { LseqIdentifier } from '../CRDT/LseqIdentifier';
-import { InternalNode } from './InternalNode';
-import { LeafNode } from './LeafNode';
-import { TreeNode } from './TypeTree';
-import { SENT_END } from './Sentinel';
-import { SENT_START } from './Sentinel';
+import { LseqIdentifier } from '../CRDT/LseqIdentifier.service';
+import { InternalNode } from './InternalNode.service';
+import { LeafNode } from './LeafNode.service';
+import { TreeNode } from './TypeTree.service';
+import { SENT_END } from './Sentinel.service';
+import { SENT_START } from './Sentinel.service';
 
 /**
  * RopeTree is a data structure that allows efficient text editing operations.

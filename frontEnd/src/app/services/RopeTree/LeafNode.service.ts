@@ -1,5 +1,5 @@
-import { TreeNodeBase } from './TypeTree';
-import { LseqIdentifier } from '../CRDT/LseqIdentifier';
+import { TreeNodeBase } from './TypeTree.service';
+import { LseqIdentifier } from '../CRDT/LseqIdentifier.service';
 
 export class LeafNode implements TreeNodeBase {
     public MAX_LENGTH = 256;

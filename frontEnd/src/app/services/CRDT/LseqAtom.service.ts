@@ -1,4 +1,4 @@
-import { LseqIdentifier } from './LseqIdentifier';
+import { LseqIdentifier } from './LseqIdentifier.service';
 
 export class LseqAtom{
     public id : LseqIdentifier;

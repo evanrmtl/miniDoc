@@ -1,6 +1,6 @@
 // LeafNode.spec.ts
-import { LeafNode } from './LeafNode';
-import { LseqIdentifier } from '../CRDT/LseqIdentifier';
+import { LeafNode } from './LeafNode.service';
+import { LseqIdentifier } from '../CRDT/LseqIdentifier.service';
 
 describe('LeafNode', () => {
     let leafNode: LeafNode;
