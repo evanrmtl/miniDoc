@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthFormComponent } from '../auth-form/auth-form.component';
 import { Router } from '@angular/router';
+import { registerRequest } from '../../../services/API/authAPI.service';
 
 @Component({
   selector: 'app-register',
@@ -16,7 +17,13 @@ export class RegisterComponent {
 
   constructor(private router : Router){}
 
+  handleFormData(data : {username : string, password : string}){
+    this.formUsername = data.username;
+    this.formPassword = data.password;
+    registerRequest(this.formUsername, this.formPassword)
+  }
+
   onLoginClick(){
-    this.router.navigate(['/login']);
+    this.router.navigate([{outlets : { modal : ['login']} } ]);
   }
 }

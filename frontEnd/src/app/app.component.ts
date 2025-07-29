@@ -1,16 +1,24 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { RichTextEditorComponent } from './components/rich-text-editor/rich-text-editor.component';
-import { LoginComponent } from './components/auth/login/login.component';
-import { RegisterComponent } from './components/auth/register/register.component';
+import { UiService } from './services/UI/UiService.service';
 
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RichTextEditorComponent, LoginComponent],
+  imports: [RouterOutlet, ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
   title = 'miniDoc';
+
+  constructor(private cdRef: ChangeDetectorRef, private uiService: UiService){}
+
+  ngAfterViewInit() {
+    this.cdRef.detectChanges();
+  }
+
+  get isModalOpen(): boolean {
+    return this.uiService.isModalOpen;
+  }
 }

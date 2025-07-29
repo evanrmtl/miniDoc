@@ -1,22 +1,25 @@
 
-<form (submit)="onSubmit()">
-
-    <label>Username</label>
+<form class="flex-form" (submit)="onSubmit()">
+    
+    
     <input 
+    class="input-group"
     type="text"
     id="username"
     name="username"
+    placeholder="Enter your username"
     required
     minlength="3"
     maxlength="20"
     [(ngModel)]="username"
     />
 
-    <label>Password</label>
     <input 
+    class="input-group"
     type="password"
     id="password"
     name="password"
+    placeholder="Enter your password"
     [(ngModel)]="password"
     />
     <button type="submit">{{ buttonName }}</button>

@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { AuthFormComponent } from '../auth-form/auth-form.component';
 import { Router } from '@angular/router';
+import { loginRequest } from '../../../services/API/authAPI.service';
+
 
 @Component({
   selector: 'app-login',
@@ -19,9 +21,10 @@ export class LoginComponent {
   handleFormData(data : {username : string, password : string}){
     this.formUsername = data.username;
     this.formPassword = data.password;
+    loginRequest(this.formUsername, this.formPassword);
   }
 
   onRegisterClick(){
-    this.router.navigate(['/register']);
+    this.router.navigate([{outlets : {modal: ['register']}}]);
   }
 }

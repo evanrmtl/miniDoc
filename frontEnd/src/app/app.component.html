@@ -6,7 +6,9 @@
   <title>Document</title>
 </head>
 <body>
-  <router-outlet></router-outlet>
-  <router-outlet name="modal" class="modal"></router-outlet>
+  <div [class.blur-background]="isModalOpen">
+    <router-outlet></router-outlet>
+  </div>
+  <router-outlet name="modal"></router-outlet>
 </body>
 </html>

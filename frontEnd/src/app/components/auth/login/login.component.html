@@ -1,21 +1,10 @@
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
+<div class="wrapper">
+  <div class="content">
+    <h1>Login</h1>
     <app-auth-form 
     [buttonName]="loginLabel" 
     (formData)="handleFormData($event)">
     </app-auth-form>
-
-    <a (click)="onRegisterClick()">I don't have an account</a>
-        
-    <p>{{ formUsername }}</p>
-    <p>{{ formPassword }}</p>
-</body>
-</html>
+    <a (click)="onRegisterClick()">Don't have an account? Register</a>
+  </div>
+</div>

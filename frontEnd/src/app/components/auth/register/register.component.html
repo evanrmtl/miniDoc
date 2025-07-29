@@ -1,3 +1,10 @@
-<app-auth-form [buttonName]="registerLabel" (usernameOutput)="formUsername" (passwordOutput)="formPassword">
-</app-auth-form>
-<a (click)="onLoginClick()">I already have an account</a>
+<div class="wrapper">
+  <div class="content">
+    <h1>Register</h1>
+    <app-auth-form 
+      [buttonName]="registerLabel" 
+      (formData)="handleFormData($event)">
+    </app-auth-form>
+    <a (click)="onLoginClick()">I already have an account</a>
+    </div>
+</div> 

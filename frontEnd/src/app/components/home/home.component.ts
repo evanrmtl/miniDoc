@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ChangeDetectorRef, Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth/authService.service';
+import { UiService } from '../../services/UI/UiService.service';
 
 @Component({
   selector: 'app-home',
@@ -9,13 +11,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class HomeComponent {
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
 
-  openLoginModal() {
-    this.router.navigate([{ outlets: { modal: ['popup'] } }], { relativeTo: this.route });
+  constructor(private uiService : UiService ,private router: Router, private auth: AuthService) {}
+
+  ngOnInit(){
+    if(!this.auth.isLoggedIn()){
+      this.uiService.openLoginModal();
+    }  
   }
-  
-  closeModal() {
-    this.router.navigate([{ outlets: { modal: null } }], { relativeTo: this.route });
-  }
+
 }
