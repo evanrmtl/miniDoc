@@ -15,5 +15,5 @@ func main() {
 		log.Panicf("error when connecting to the Database:", err)
 	}
 	engine := routes.CreateRoutes(db)
-	engine.Run()
+	engine.Run(":3000")
 }
