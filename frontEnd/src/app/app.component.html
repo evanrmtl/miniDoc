@@ -6,6 +6,11 @@
   <title>Document</title>
 </head>
 <body>
+  @if (getNotification) {
+    <div class="{{ getNotification.type }}-popup">
+      {{ getNotification.message }}
+    </div>
+  }
   <div [class.blur-background]="isModalOpen">
     <router-outlet></router-outlet>
   </div>
