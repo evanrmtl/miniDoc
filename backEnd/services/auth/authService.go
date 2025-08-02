@@ -20,7 +20,7 @@ func Register(ctx context.Context, username string, password string, db *gorm.DB
 	if err == nil {
 		return ErrUserExists
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 
