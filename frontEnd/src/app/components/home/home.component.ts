@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth/authService.service';
 import { UiService } from '../../services/UI/UiService.service';
@@ -19,5 +19,4 @@ export class HomeComponent {
       this.uiService.openLoginModal();
     }  
   }
-
 }
