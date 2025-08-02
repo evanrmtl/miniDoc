@@ -11,8 +11,8 @@ const (
 
 // UsersFile mapped from table <users_files>
 type UsersFileMigration struct {
-	UserID int32  `gorm:"column:user_id;primaryKey;not null" json:"user_id"`
-	FileID int32  `gorm:"column:file_id;primaryKey;not null" json:"file_id"`
+	UserID uint32 `gorm:"column:user_id;primaryKey;not null" json:"user_id"`
+	FileID uint32 `gorm:"column:file_id;primaryKey;not null" json:"file_id"`
 	Role   string `gorm:"column:role;default:Collaborator" json:"role"`
 }
 
@@ -31,8 +31,8 @@ func (uf *UsersFileMigration) Validate() error {
 }
 
 type UsersFile struct {
-	UserID int32  `gorm:"column:user_id;primaryKey;not null" json:"user_id"`
-	FileID int32  `gorm:"column:file_id;primaryKey;not null" json:"file_id"`
+	UserID uint32 `gorm:"column:user_id;primaryKey;not null" json:"user_id"`
+	FileID uint32 `gorm:"column:file_id;primaryKey;not null" json:"file_id"`
 	Role   string `gorm:"column:role;default:Collaborator" json:"role"`
 	File   File   `gorm:"foreignKey:FileID"`
 	User   User   `gorm:"foreignKey:UserID"`
