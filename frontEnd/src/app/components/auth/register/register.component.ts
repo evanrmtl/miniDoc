@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { AuthFormComponent } from '../auth-form/auth-form.component';
 import { Router } from '@angular/router';
-import { registerRequest } from '../../../services/API/authAPI.service';
+import { AuthService } from '../../../services/auth/authService.service';
+import { NotificationService } from '../../../services/notification/notification.service';
+import { HomeComponent } from '../../home/home.component';
+import { RefreshService } from '../../../services/refresh/refreash.service';
 
 @Component({
   selector: 'app-register',
@@ -15,12 +18,31 @@ export class RegisterComponent {
   formUsername! : string;
   formPassword! : string;
 
-  constructor(private router : Router){}
+  private statusMessage = { message: '', type: '' };
+
+
+  constructor(private refresh : RefreshService, private router : Router, private authService : AuthService, private notification : NotificationService){}
 
   handleFormData(data : {username : string, password : string}){
     this.formUsername = data.username;
     this.formPassword = data.password;
-    registerRequest(this.formUsername, this.formPassword)
+     this.authService.registerRequest(this.formUsername, this.formPassword).subscribe({
+      next: () => {
+        this.statusMessage = { message: '', type: ''};
+        this.notification.show('Connected', 'success');
+        this.refresh.triggerRefresh();
+        this.router.navigate(['home']);
+      },
+      error: (error) => {
+        this.statusMessage = { message: error.error?.error || 'Unknown error', type: 'error' };
+        throw error;
+      },
+      complete: () => {}
+    });
+  }
+
+  get getStatusMessage() {
+    return this.statusMessage;
   }
 
   onLoginClick(){

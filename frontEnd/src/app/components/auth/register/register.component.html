@@ -6,5 +6,10 @@
       (formData)="handleFormData($event)">
     </app-auth-form>
     <a (click)="onLoginClick()">I already have an account</a>
+    @if (getStatusMessage.type == 'error') {
+      <div class="error-popup">
+        {{ getStatusMessage.message }}
+      </div>
+    }
     </div>
 </div> 
