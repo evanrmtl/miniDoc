@@ -20,7 +20,6 @@ export class AuthService {
             .pipe(
                 tap((res: any) => {
                     if(res.JWT) { 
-                        console.log(res.JWT)
                         this.setToken(res.JWT); }
                 }),
                 catchError(this.handleError)
@@ -44,5 +43,4 @@ export class AuthService {
     private handleError(error: any): Observable<never> {
         throw error;
     }
-
 }

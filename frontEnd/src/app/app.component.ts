@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { UiService } from './services/UI/UiService.service';
 import { NotificationService } from './services/notification/notification.service';
 import { RefreshService } from './services/refresh/refreash.service';
+import { v4 as uuidv4} from 'uuid';
 
 
 @Component({
@@ -33,6 +34,9 @@ export class AppComponent {
         this.refreshService.clearRefresh()
       }
     });
+
+    const sessionID = this.getSessionID()
+    console.log('sessionID for this tab:', sessionID)
   }
 
   ngAfterViewInit() {
@@ -49,5 +53,14 @@ export class AppComponent {
 
   reload(){
     this.uiService.closeLoginModal()
+  }
+
+  getSessionID(): string{
+    let sessionID = sessionStorage.getItem("sessionID")
+    if (!sessionID) {
+      sessionID = uuidv4()
+      sessionStorage.setItem("sessionID", sessionID)
+    }
+    return sessionID;
   }
 }
