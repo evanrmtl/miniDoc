@@ -6,8 +6,14 @@
   <title>Document</title>
 </head>
 <body>
-  <app-rich-text-editor>
-
-  </app-rich-text-editor>
+  @if (getNotification) {
+    <div class="{{ getNotification.type }}-popup">
+      {{ getNotification.message }}
+    </div>
+  }
+  <div [class.blur-background]="isModalOpen">
+    <router-outlet></router-outlet>
+  </div>
+  <router-outlet name="modal"></router-outlet>
 </body>
 </html>

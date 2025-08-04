@@ -1,0 +1,25 @@
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.blur-background {
+    filter: blur(1.5px);
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.success-popup {
+    font-family: 'Open Sans', sans-serif;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    padding: 10px 15px;
+    min-width: 200px;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: bold;
+    background-color: #4caf50;
+    text-align: center;
+}

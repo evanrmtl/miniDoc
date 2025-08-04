@@ -1,9 +1,9 @@
 // RopeTree.spec.ts
-import { RopeTree } from './RopeTree';
-import { LseqIdentifier } from '../CRDT/LseqIdentifier';
-import { LeafNode } from './LeafNode';
-import { InternalNode } from './InternalNode';
-import { SENT_START, SENT_END } from './Sentinel';
+import { RopeTree } from './RopeTree.service';
+import { LseqIdentifier } from '../CRDT/LseqIdentifier.service';
+import { LeafNode } from './LeafNode.service';
+import { InternalNode } from './InternalNode.service';
+import { SENT_START, SENT_END } from './Sentinel.service';
 
 describe('RopeTree', () => {
     let ropeTree: RopeTree;

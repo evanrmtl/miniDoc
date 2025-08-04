@@ -1,5 +1,5 @@
-import { LSEQ } from './LSEQ';
-import { LseqIdentifier } from './LseqIdentifier';
+import { LSEQ } from './LSEQ.service';
+import { LseqIdentifier } from './LseqIdentifier.service';
 
 describe('LSEQ', () => {
     let lseq: LSEQ;

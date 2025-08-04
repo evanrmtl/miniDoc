@@ -1,4 +1,4 @@
-import { LseqIdentifier } from './LseqIdentifier';
+import { LseqIdentifier } from './LseqIdentifier.service';
 
 describe('LseqIdentifier compare method', () => {
     describe('same length paths', () => {

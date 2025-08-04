@@ -1,5 +1,5 @@
-import { TreeNode } from './TypeTree';
-import { TreeNodeBase } from './TypeTree';
+import { TreeNode } from './TypeTree.service';
+import { TreeNodeBase } from './TypeTree.service';
 
 export class InternalNode implements TreeNodeBase {
     public left: TreeNode;

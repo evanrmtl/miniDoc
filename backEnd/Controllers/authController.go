@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	jwt "github.com/evanrmtl/miniDoc/services/JWT"
+	jwtService "github.com/evanrmtl/miniDoc/services/JWT"
 	authService "github.com/evanrmtl/miniDoc/services/auth"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -30,7 +32,19 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Operation unavailable"})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"success": "User created"})
+
+	token, err := jwtService.CreateJWT(c.Request.Context(), req.Username, db)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please try again"})
+		return
+	}
+
+	c.JSON(http.StatusCreated,
+		gin.H{
+			"success": "User created",
+			"JWT":     token.Token,
+		},
+	)
 }
 
 func LoginController(c *gin.Context, db *gorm.DB) {
@@ -58,5 +72,17 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusAccepted, gin.H{"success": "User connected"})
+
+	token, err := jwt.CreateJWT(c.Request.Context(), req.Username, db)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please log in again"})
+		return
+	}
+
+	c.JSON(http.StatusAccepted,
+		gin.H{
+			"success": "User connected",
+			"JWT":     token.Token,
+		},
+	)
 }
