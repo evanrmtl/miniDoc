@@ -24,3 +24,7 @@ type Session struct {
 	Agent     string `gorm:"column:agent" json:"agent"`
 	User      User   `gorm:"foreignKey:UserID"`
 }
+
+func (*Session) TableName() string {
+	return TableNameSession
+}

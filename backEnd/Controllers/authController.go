@@ -35,7 +35,7 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 
 	token, err := jwtService.CreateJWT(c.Request.Context(), req.Username, db)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please log in"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please try again"})
 		return
 	}
 

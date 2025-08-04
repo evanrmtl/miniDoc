@@ -19,10 +19,10 @@ func UpdateSession(userID string, agent string, ctx context.Context, db *gorm.DB
 }
 
 func DeleteExpiredSession(ctx context.Context, db *gorm.DB) {
-	for true {
+	for {
 		_, err := gorm.G[models.Session](db).Where("expires_at < ?", time.Now().Unix()).Delete(ctx)
 		if err != nil {
-			fmt.Errorf(err.Error())
+			fmt.Println("Error deleting expired sessions:", err.Error())
 		}
 		time.Sleep(time.Hour * 24)
 	}
