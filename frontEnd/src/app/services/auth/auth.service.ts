@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { CreateComputedOptions, Injectable } from "@angular/core";
+import { Injectable } from "@angular/core";
 import { catchError, Observable, tap } from "rxjs";
 import { WebSocketService } from "../websocket/websocket.service";
 

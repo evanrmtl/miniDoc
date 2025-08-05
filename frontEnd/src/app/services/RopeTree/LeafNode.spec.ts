@@ -1,4 +1,3 @@
-// LeafNode.spec.ts
 import { LeafNode } from './LeafNode.service';
 import { LseqIdentifier } from '../CRDT/LseqIdentifier.service';
 
@@ -32,7 +31,6 @@ describe('LeafNode', () => {
             const originalIds = [new LseqIdentifier([1], 'client-a')];
             const node = new LeafNode(originalIds);
             
-            // Modifier l'array original ne doit pas affecter le node
             originalIds.push(new LseqIdentifier([2], 'client-b'));
             
             expect(node.ids.length).toBe(1);
@@ -79,9 +77,9 @@ describe('LeafNode', () => {
         });
 
         it('should handle duplicate values by client comparison', () => {
-            const newId = new LseqIdentifier([3], 'client-a'); // Same path, different client
+            const newId = new LseqIdentifier([3], 'client-a'); 
             const index = leafNode.findOrderedInsertIndex(newId);
-            expect(index).toBe(2); // Should insert after existing [3] with 'client'
+            expect(index).toBe(2); 
         });
     });
 
@@ -119,7 +117,6 @@ describe('LeafNode', () => {
 
     describe('split', () => {
         it('should split even number of elements correctly', () => {
-            // Add 4 elements
             for (let i = 1; i <= 4; i++) {
                 leafNode.ids.push(new LseqIdentifier([i], 'client'));
             }
@@ -135,7 +132,6 @@ describe('LeafNode', () => {
         });
 
         it('should split odd number of elements correctly', () => {
-            // Add 5 elements
             for (let i = 1; i <= 5; i++) {
                 leafNode.ids.push(new LseqIdentifier([i], 'client'));
             }
@@ -162,11 +158,10 @@ describe('LeafNode', () => {
 
             const { leftLeaf, rightLeaf } = leafNode.split();
 
-            // Modify one leaf shouldn't affect the other
             leftLeaf.ids.push(new LseqIdentifier([99], 'client'));
 
             expect(rightLeaf.length).toBe(1);
-            expect(leafNode.length).toBe(2); // Original should be unchanged
+            expect(leafNode.length).toBe(2);
         });
     });
 
@@ -220,7 +215,6 @@ describe('LeafNode', () => {
         });
 
         it('should reject addition when at max capacity', () => {
-            // Fill to max capacity
             for (let i = 0; i < 256; i++) {
                 leafNode.addId([i], 'client');
             }
@@ -284,16 +278,13 @@ describe('LeafNode', () => {
 
     describe('Edge cases and stress tests', () => {
         it('should handle capacity boundary correctly', () => {
-            // Add exactly MAX_LENGTH - 1 items
             for (let i = 0; i < 255; i++) {
                 expect(leafNode.addId([i], 'client')).toBe(true);
             }
 
-            // Last addition should succeed
             expect(leafNode.addId([255], 'client')).toBe(true);
             expect(leafNode.length).toBe(256);
 
-            // Next addition should fail
             expect(leafNode.addId([256], 'client')).toBe(false);
         });
 
@@ -308,16 +299,13 @@ describe('LeafNode', () => {
             });
 
             it('should insert LSEQ identifiers in correct order', () => {
-                // Initialize with sentinels
                 leafNode.addId([0], 'sentinel-start');
                 leafNode.addId([1000000], 'sentinel-end');
                 
-                // Insert user data
                 leafNode.insertIdOrdered(new LseqIdentifier([500], 'client'));
                 leafNode.insertIdOrdered(new LseqIdentifier([250], 'client'));
                 leafNode.insertIdOrdered(new LseqIdentifier([750], 'client'));
                 
-                // Should maintain order: 0, 250, 500, 750, 1000000
                 expect(leafNode.ids[0].path[0]).toBe(0);
                 expect(leafNode.ids[1].path[0]).toBe(250);
                 expect(leafNode.ids[2].path[0]).toBe(500);
