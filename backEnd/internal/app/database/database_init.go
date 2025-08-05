@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/evanrmtl/miniDoc/models"
+	"github.com/evanrmtl/miniDoc/internal/app/models"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

@@ -4,11 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/evanrmtl/miniDoc/models"
-	jwt "github.com/evanrmtl/miniDoc/services/JWT"
-	jwtService "github.com/evanrmtl/miniDoc/services/JWT"
-	authService "github.com/evanrmtl/miniDoc/services/auth"
-	sessionService "github.com/evanrmtl/miniDoc/services/session"
+	"github.com/evanrmtl/miniDoc/internal/app/models"
+	"github.com/evanrmtl/miniDoc/internal/pkg"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -27,9 +24,9 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	err := authService.Register(ctx, req.Username, req.Password, db)
+	err := Register(ctx, req.Username, req.Password, db)
 	if err != nil {
-		if errors.Is(err, authService.ErrUserExists) {
+		if errors.Is(err, ErrUserExists) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
@@ -37,7 +34,7 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	token, err := jwtService.CreateJWT(ctx, req.Username, db)
+	token, err := pkg.CreateJWT(ctx, req.Username, db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please try again"})
 		return
@@ -57,7 +54,7 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 
 	agentUsed := c.GetHeader("User-Agent")
 
-	sessionService.CreateSession(currUser.UserID, agentUsed, ctx, db)
+	pkg.CreateSession(currUser.UserID, agentUsed, ctx, db)
 }
 
 func LoginController(c *gin.Context, db *gorm.DB) {
@@ -74,13 +71,13 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	err := authService.Login(ctx, req.Username, req.Password, db)
+	err := Login(ctx, req.Username, req.Password, db)
 	if err != nil {
-		if errors.Is(err, authService.ErrUserExists) {
+		if errors.Is(err, ErrUserExists) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "incorrect username"})
 			return
 		}
-		if errors.Is(err, authService.ErrIncorrectPassword) {
+		if errors.Is(err, ErrIncorrectPassword) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "incorrect password"})
 			return
 		}
@@ -88,8 +85,8 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	token, err := jwt.CreateJWT(ctx, req.Username, db)
-	if err == jwt.ErrJWTExpired {
+	token, err := pkg.CreateJWT(ctx, req.Username, db)
+	if err == pkg.ErrJWTExpired {
 
 	}
 	if err != nil {
@@ -111,5 +108,5 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 
 	agentUsed := c.GetHeader("User-Agent")
 
-	sessionService.CreateSession(currUser.UserID, agentUsed, ctx, db)
+	pkg.CreateSession(currUser.UserID, agentUsed, ctx, db)
 }

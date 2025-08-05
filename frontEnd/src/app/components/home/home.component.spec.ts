@@ -2,8 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HomeComponent } from './home.component';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { AuthService } from '../../services/auth/authService.service';
-import { UiService } from '../../services/UI/UiService.service';
+import { AuthService } from '../../services/auth/auth.service';
+import { UiService } from '../../services/UI/Ui.service';
 import { Router } from '@angular/router';
 
 describe('HomeComponent', () => {

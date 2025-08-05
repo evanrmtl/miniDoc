@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/evanrmtl/miniDoc/database/generate"
-	"github.com/evanrmtl/miniDoc/routes"
-	sessionService "github.com/evanrmtl/miniDoc/services/session"
+	generate "github.com/evanrmtl/miniDoc/internal/app/database"
+	routes "github.com/evanrmtl/miniDoc/internal/middleware"
+	"github.com/evanrmtl/miniDoc/internal/pkg"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go sessionService.DeleteExpiredSession(ctx, db)
+	go pkg.DeleteExpiredSession(ctx, db)
 
 	srv := &http.Server{Addr: ":3000", Handler: routes.CreateRoutes(db)}
 	go func() {

@@ -1,6 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { catchError, Observable, tap } from "rxjs";
+import { WebSocketService } from "../websocket/websocket.service";
 
 @Injectable({
     providedIn : 'root'
@@ -9,7 +10,7 @@ export class AuthService {
 
     readonly urlServer: string = 'http://localhost:3000';
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private socket: WebSocketService) {}
 
     isLoggedIn(): boolean {
         return !!localStorage.getItem("JWT");
@@ -20,7 +21,12 @@ export class AuthService {
             .pipe(
                 tap((res: any) => {
                     if(res.JWT) { 
-                        this.setToken(res.JWT); }
+                        this.setToken(res.JWT);
+                        const jwt = localStorage.getItem('JWT');
+                        if (jwt) {
+                        this.socket.connect();
+                        }
+                    }
                 }),
                 catchError(this.handleError)
             );
@@ -30,7 +36,13 @@ export class AuthService {
         return this.http.post(`${this.urlServer}/register`, {username: username, password: password})
             .pipe(
                 tap((res: any) => {
-                    if(res.JWT) { this.setToken(res.JWT); }
+                    if(res.JWT) { 
+                        this.setToken(res.JWT); 
+                        const jwt = localStorage.getItem('JWT');
+                        if (jwt) {
+                            this.socket.connect();
+                        }
+                    }
                 }),
                 catchError(this.handleError)
             );

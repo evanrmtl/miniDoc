@@ -1,4 +1,4 @@
-package authService
+package auth
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/evanrmtl/miniDoc/models"
+	"github.com/evanrmtl/miniDoc/internal/app/models"
 	"gorm.io/gorm"
 )
 

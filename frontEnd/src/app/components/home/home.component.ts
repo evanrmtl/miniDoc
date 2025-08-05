@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth/authService.service';
-import { UiService } from '../../services/UI/UiService.service';
+import { AuthService } from '../../services/auth/auth.service';
+import { UiService } from '../../services/UI/Ui.service';
 
 @Component({
   selector: 'app-home',
@@ -12,11 +12,11 @@ import { UiService } from '../../services/UI/UiService.service';
 export class HomeComponent {
 
 
-  constructor(private uiService : UiService ,private router: Router, private auth: AuthService) {}
+  constructor(private uiService : UiService, private auth: AuthService ) {}
 
   ngOnInit(){
     if(!this.auth.isLoggedIn()){
       this.uiService.openLoginModal();
-    }  
+    } 
   }
 }

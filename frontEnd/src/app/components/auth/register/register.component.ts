@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthFormComponent } from '../auth-form/auth-form.component';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../services/auth/authService.service';
+import { AuthService } from '../../../services/auth/auth.service';
 import { NotificationService } from '../../../services/notification/notification.service';
 import { HomeComponent } from '../../home/home.component';
 import { RefreshService } from '../../../services/refresh/refreash.service';

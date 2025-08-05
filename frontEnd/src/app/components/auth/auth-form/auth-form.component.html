@@ -11,6 +11,7 @@
     required
     minlength="3"
     maxlength="20"
+    autocomplete="username"
     [(ngModel)]="username"
     />
 
@@ -20,6 +21,7 @@
     id="password"
     name="password"
     placeholder="Enter your password"
+    autocomplete="current-password"
     [(ngModel)]="password"
     />
     <button type="submit">{{ buttonName }}</button>
