@@ -1,9 +1,10 @@
 import { ChangeDetectorRef, Component, effect } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { UiService } from './services/UI/UiService.service';
+import { UiService } from './services/UI/Ui.service';
 import { NotificationService } from './services/notification/notification.service';
 import { RefreshService } from './services/refresh/refreash.service';
 import { v4 as uuidv4} from 'uuid';
+import { WebSocketService } from './services/websocket/websocket.service';
 
 
 @Component({
@@ -17,11 +18,13 @@ export class AppComponent {
 
   private notification: { message: string, type: string } | null = null;
 
+
   constructor(
     private refreshService: RefreshService,
     private cdRef: ChangeDetectorRef, 
     private uiService: UiService, 
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private socket: WebSocketService
   ) {
     this.notificationService.notification.subscribe(msg => {
       this.notification = msg; 
@@ -37,6 +40,13 @@ export class AppComponent {
 
     const sessionID = this.getSessionID()
     console.log('sessionID for this tab:', sessionID)
+  }
+
+  ngOnInit() {
+    const jwt = localStorage.getItem('JWT');
+    if (jwt) {
+      this.socket.connect();
+    }
   }
 
   ngAfterViewInit() {
