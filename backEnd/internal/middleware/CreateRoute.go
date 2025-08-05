@@ -3,7 +3,8 @@ package routes
 import (
 	"time"
 
-	auth "github.com/evanrmtl/miniDoc/Controllers"
+	"github.com/evanrmtl/miniDoc/internal/middleware/subroute"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -20,13 +21,10 @@ func CreateRoutes(db *gorm.DB) *gin.Engine {
 	config.AllowCredentials = true
 	config.MaxAge = 12 * time.Hour
 
+	subroute.CreateAuthRoutes(router, db)
+	subroute.CreateWSRoute(router)
+
 	router.Use(cors.New(config))
 
-	router.POST("/register", func(c *gin.Context) {
-		auth.RegisterController(c, db)
-	})
-	router.POST("/login", func(c *gin.Context) {
-		auth.LoginController(c, db)
-	})
 	return router
 }

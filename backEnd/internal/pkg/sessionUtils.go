@@ -1,4 +1,4 @@
-package sessionService
+package pkg
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/evanrmtl/miniDoc/models"
+	"github.com/evanrmtl/miniDoc/internal/app/models"
 	"gorm.io/gorm"
 )
 

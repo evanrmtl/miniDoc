@@ -1,4 +1,4 @@
-package jwtService
+package pkg
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 
 	"time"
 
-	"github.com/evanrmtl/miniDoc/models"
+	"github.com/evanrmtl/miniDoc/internal/app/models"
 	golangjwt "github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
 )
