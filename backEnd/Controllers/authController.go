@@ -4,14 +4,18 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/evanrmtl/miniDoc/models"
 	jwt "github.com/evanrmtl/miniDoc/services/JWT"
 	jwtService "github.com/evanrmtl/miniDoc/services/JWT"
 	authService "github.com/evanrmtl/miniDoc/services/auth"
+	sessionService "github.com/evanrmtl/miniDoc/services/session"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func RegisterController(c *gin.Context, db *gorm.DB) {
+
+	ctx := c.Request.Context()
 
 	var req struct {
 		Username string `json:"username" binding:"required"`
@@ -23,7 +27,7 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	err := authService.Register(c.Request.Context(), req.Username, req.Password, db)
+	err := authService.Register(ctx, req.Username, req.Password, db)
 	if err != nil {
 		if errors.Is(err, authService.ErrUserExists) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
@@ -33,7 +37,7 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	token, err := jwtService.CreateJWT(c.Request.Context(), req.Username, db)
+	token, err := jwtService.CreateJWT(ctx, req.Username, db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please try again"})
 		return
@@ -45,9 +49,20 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 			"JWT":     token.Token,
 		},
 	)
+
+	currUser, err := gorm.G[models.User](db).Where("username = ?", req.Username).First(ctx)
+	if err != nil {
+		return
+	}
+
+	agentUsed := c.GetHeader("User-Agent")
+
+	sessionService.CreateSession(currUser.UserID, agentUsed, ctx, db)
 }
 
 func LoginController(c *gin.Context, db *gorm.DB) {
+
+	ctx := c.Request.Context()
 
 	var req struct {
 		Username string `json:"username" binding:"required"`
@@ -59,7 +74,7 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	err := authService.Login(c.Request.Context(), req.Username, req.Password, db)
+	err := authService.Login(ctx, req.Username, req.Password, db)
 	if err != nil {
 		if errors.Is(err, authService.ErrUserExists) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "incorrect username"})
@@ -73,7 +88,10 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	token, err := jwt.CreateJWT(c.Request.Context(), req.Username, db)
+	token, err := jwt.CreateJWT(ctx, req.Username, db)
+	if err == jwt.ErrJWTExpired {
+
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please log in again"})
 		return
@@ -85,4 +103,13 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 			"JWT":     token.Token,
 		},
 	)
+
+	currUser, err := gorm.G[models.User](db).Where("username = ?", req.Username).First(ctx)
+	if err != nil {
+		return
+	}
+
+	agentUsed := c.GetHeader("User-Agent")
+
+	sessionService.CreateSession(currUser.UserID, agentUsed, ctx, db)
 }
