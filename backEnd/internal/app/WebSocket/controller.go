@@ -18,7 +18,7 @@ func WebSocketHandler(c *gin.Context) {
 		EnableCompression: true,
 	}
 
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, c.Request.Header)
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -31,7 +31,7 @@ func WebSocketHandler(c *gin.Context) {
 			log.Println(err)
 			return
 		}
-		fmt.Println(msg)
+		fmt.Println(string(msg))
 
 		if err := conn.WriteMessage(messageType, msg); err != nil {
 			log.Println(err)

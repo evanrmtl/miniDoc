@@ -21,10 +21,10 @@ func CreateRoutes(db *gorm.DB) *gin.Engine {
 	config.AllowCredentials = true
 	config.MaxAge = 12 * time.Hour
 
+	router.Use(cors.New(config))
+
 	subroute.CreateAuthRoutes(router, db)
 	subroute.CreateWSRoute(router)
-
-	router.Use(cors.New(config))
 
 	return router
 }
