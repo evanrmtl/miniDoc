@@ -1,15 +1,43 @@
 <div class="wrapper">
   <div class="content">
     <h1>Register</h1>
-    <app-auth-form 
-      [buttonName]="registerLabel" 
-      (formData)="handleFormData($event)">
-    </app-auth-form>
-    <a (click)="onLoginClick()">I already have an account</a>
-    @if (getStatusMessage.type == 'error') {
+    
+    <!-- Formulaire avec le même style que ton auth-form -->
+    <form class="flex-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <input 
+        class="input-group"
+        type="text"
+        id="username"
+        name="username"
+        placeholder="Enter your username"
+        required
+        minlength="3"
+        maxlength="20"
+        autocomplete="username"
+        formControlName="username"
+      />
+
+      <input 
+        class="input-group"
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Enter your password"
+        autocomplete="current-password"
+        formControlName="password"
+      />
+      
+      <button type="submit" [disabled]="registerForm.invalid">
+        Register
+      </button>
+    </form>
+    
+    <a (click)="switchToLogin()">Already have an account? Login</a>
+    
+    @if (userState.error()) {
       <div class="error-popup">
-        {{ getStatusMessage.message }}
+        {{ userState.error() }}
       </div>
     }
-    </div>
-</div> 
+  </div>
+</div>

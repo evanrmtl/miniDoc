@@ -1,10 +1,8 @@
-import { ChangeDetectorRef, Component, effect } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { UiService } from './services/UI/Ui.service';
 import { NotificationService } from './services/notification/notification.service';
-import { RefreshService } from './services/refresh/refreash.service';
-import { v4 as uuidv4} from 'uuid';
-import { WebSocketService } from './services/websocket/websocket.service';
+import { Subscription } from 'rxjs';
+import { ModalState } from './state/modalState.service';
 
 
 @Component({
@@ -13,64 +11,27 @@ import { WebSocketService } from './services/websocket/websocket.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
-  title = 'miniDoc';
+export class AppComponent implements OnInit, OnDestroy {
+  private readonly notificationService = inject(NotificationService);
+  
+  currentNotification: { message: string, type: string } | null = null;
+  private notificationSubscription?: Subscription;
+  readonly modalState: ModalState = inject(ModalState)
 
-  private notification: { message: string, type: string } | null = null;
-
-
-  constructor(
-    private refreshService: RefreshService,
-    private cdRef: ChangeDetectorRef, 
-    private uiService: UiService, 
-    private notificationService: NotificationService,
-    private socket: WebSocketService
-  ) {
-    this.notificationService.notification.subscribe(msg => {
-      this.notification = msg; 
-      setTimeout(() => this.notification = null, 2000);
-    });
-
-    effect(() => {
-      if (this.refreshService.refreshSignal()) {
-        this.reload();
-        this.refreshService.clearRefresh()
+  ngOnInit(): void {
+    this.notificationSubscription = this.notificationService.notification.subscribe(
+      notification => {
+        this.currentNotification = notification;
+        setTimeout(() => {
+          this.currentNotification = null;
+        }, 3000);
       }
-    });
-
-    const sessionID = this.getSessionID()
-    console.log('sessionID for this tab:', sessionID)
+    );
   }
 
-  ngOnInit() {
-    const jwt = localStorage.getItem('JWT');
-    if (jwt) {
-      this.socket.connect();
+  ngOnDestroy(): void {
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
     }
-  }
-
-  ngAfterViewInit() {
-    this.cdRef.detectChanges();
-  }
-
-  get getNotification(): { message: string, type: string } | null {
-    return this.notification;
-  }
-
-  get isModalOpen(): boolean {
-    return this.uiService.isModalOpen;
-  }
-
-  reload(){
-    this.uiService.closeLoginModal()
-  }
-
-  getSessionID(): string{
-    let sessionID = sessionStorage.getItem("sessionID")
-    if (!sessionID) {
-      sessionID = uuidv4()
-      sessionStorage.setItem("sessionID", sessionID)
-    }
-    return sessionID;
   }
 }

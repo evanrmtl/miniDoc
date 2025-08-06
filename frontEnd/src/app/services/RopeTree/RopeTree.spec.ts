@@ -1,4 +1,3 @@
-// RopeTree.spec.ts
 import { RopeTree } from './RopeTree.service';
 import { LseqIdentifier } from '../CRDT/LseqIdentifier.service';
 import { LeafNode } from './LeafNode.service';

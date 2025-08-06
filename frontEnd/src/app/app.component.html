@@ -1,19 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  @if (getNotification) {
-    <div class="{{ getNotification.type }}-popup">
-      {{ getNotification.message }}
-    </div>
-  }
-  <div [class.blur-background]="isModalOpen">
-    <router-outlet></router-outlet>
+@if (currentNotification) {
+  <div class="notification {{ currentNotification.type }}">
+    {{ currentNotification.message }}
   </div>
+}
+
+<div class="app-container" [class.blur-background]="modalState.isOpen()">
+  <router-outlet></router-outlet>
+</div>
+
+<div class="modal-overlay">
   <router-outlet name="modal"></router-outlet>
-</body>
-</html>
+</div>

@@ -73,12 +73,12 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 
 	err := Login(ctx, req.Username, req.Password, db)
 	if err != nil {
-		if errors.Is(err, ErrUserExists) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "incorrect username"})
+		if errors.Is(err, ErrUserNotExists) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "incorrect username"})
 			return
 		}
 		if errors.Is(err, ErrIncorrectPassword) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "incorrect password"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "incorrect password"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

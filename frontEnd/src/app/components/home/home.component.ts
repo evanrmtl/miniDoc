@@ -1,7 +1,6 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth/auth.service';
-import { UiService } from '../../services/UI/Ui.service';
+import { Component, inject, OnInit } from '@angular/core';
+import { UserState } from '../../state/userState.service';
+import { NavigateService } from '../../navigation/navigation.service';
 
 @Component({
   selector: 'app-home',
@@ -9,14 +8,19 @@ import { UiService } from '../../services/UI/Ui.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
+  readonly userState = inject(UserState);
+  readonly navigator = inject(NavigateService)
 
+  ngOnInit(): void {
+    if (this.userState.isLoggedIn()) {
+      this.loadUserData();
+    } else {
+      this.navigator.openModal('login');
+    }
+  }
 
-  constructor(private uiService : UiService, private auth: AuthService ) {}
-
-  ngOnInit(){
-    if(!this.auth.isLoggedIn()){
-      this.uiService.openLoginModal();
-    } 
+  private loadUserData(): void {
+    console.log('Chargement des données utilisateur...');
   }
 }
