@@ -9,7 +9,7 @@ html, body {
     overflow: hidden;
 }
 
-.success-popup {
+.notification {
     font-family: 'Open Sans', sans-serif;
     position: fixed;
     top: 20px;
@@ -20,6 +20,11 @@ html, body {
     border-radius: 6px;
     color: #fff;
     font-weight: bold;
-    background-color: #4caf50;
     text-align: center;
+    &.success{
+        background-color: #4caf50;
+    }
+    &.error{
+        background-color: #b84646;
+    }
 }

@@ -1,4 +1,6 @@
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
+import { WebSocketState } from "../../state/websocketState.service";
+import { WebSocketErrorHandler } from "./errorHandler/webSocketHandler.service";
 
 @Injectable({
     providedIn: 'root'
@@ -6,40 +8,66 @@ import { Injectable } from "@angular/core";
 export class WebSocketService {
     
     private socket!: WebSocket;
-    private isConnected: boolean = false;
-
-    constructor() {
-    }
+    readonly websocketState: WebSocketState = inject(WebSocketState)
+    readonly errorHandler: WebSocketErrorHandler = inject(WebSocketErrorHandler)
 
     connect(): void {
-        if (this.isConnected) {
+        if (this.socket && this.socket.readyState == WebSocket.OPEN) {
             console.log("WebSocket déjà connecté");
             return;
         }
 
+        this.websocketState.setError(null);
         this.socket = new WebSocket('ws://localhost:3000/ws');
+        this.updateFromSocket();
 
         this.socket.addEventListener("open", (event) => {
             console.log("server connecté");
-            this.isConnected = true;
-            this.send('Hello server');
+            this.updateFromSocket();
         });
 
-        this.socket.addEventListener("close", () => {
+        this.socket.addEventListener("close", (event: CloseEvent) => {
             console.log("WebSocket fermé");
-            this.isConnected = false;
+            this.updateFromSocket();
+            if (!event.wasClean){
+                this.errorHandler.handleWebSocketError(event);
+            }
         });
 
         this.socket.addEventListener("error", err => {
-            console.error("WebSocket erreur", err);
+            this.websocketState.setError('Erreur de connexion WebSocket');
+            this.errorHandler.handleWebSocketError(err);
         });
     }
 
-    public send(message: string): void {
-        if (this.isConnected && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(message);
-        } else {
-            console.error('WebSocket is not open. Message not sent:', message);
+    private updateFromSocket(){
+        if(!this.socket.readyState){
+            return;
+        }
+        switch(this.socket.readyState){
+            case this.socket.OPEN:
+                this.websocketState.setStatus('open');
+                this.websocketState.setIsOpen(true);
+                break;
+            case this.socket.CONNECTING:
+                this.websocketState.setStatus('connecting')
+                this.websocketState.setIsOpen(false);
+                break;
+            case this.socket.CLOSING:
+                this.websocketState.setStatus('closing');
+                this.websocketState.setIsOpen(false);
+                break;
+            case this.socket.CLOSED:
+                this.websocketState.setStatus('closed');
+                this.websocketState.setIsOpen(false);
+                break;
+        }
+    }
+
+    disconnect(): void {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.websocketState.setStatus('closing');
+            this.socket.close();
         }
     }
 }

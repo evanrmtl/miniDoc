@@ -1,51 +1,73 @@
-import { Component } from '@angular/core';
-import { AuthFormComponent } from '../auth-form/auth-form.component';
-import { Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
 import { AuthService } from '../../../services/auth/auth.service';
 import { NotificationService } from '../../../services/notification/notification.service';
-import { HomeComponent } from '../../home/home.component';
-import { RefreshService } from '../../../services/refresh/refreash.service';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigateService } from '../../../navigation/navigation.service';
+import { UserState } from '../../../state/userState.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-register',
-  imports: [AuthFormComponent],
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
 export class RegisterComponent {
-  registerLabel : string = 'Register';
 
-  formUsername! : string;
-  formPassword! : string;
+  private readonly fb: FormBuilder = inject(FormBuilder)
+  private readonly authService: AuthService = inject(AuthService) 
+  private readonly navigator: NavigateService = inject(NavigateService)
+  private readonly notification: NotificationService = inject(NotificationService)
 
-  private statusMessage = { message: '', type: '' };
+  readonly userState = inject(UserState)
 
+  readonly registerForm: FormGroup =  this.fb.group({
+    username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]],
+    password: ['', [Validators.required, Validators.minLength(6)]]
+  })
 
-  constructor(private refresh : RefreshService, private router : Router, private authService : AuthService, private notification : NotificationService){}
+  onSubmit(): void {
+    if(this.registerForm.invalid){
+      this.markAllFiledAsTouched()
+      return;
+    }
+    const {username, password} = this.registerForm.value;
 
-  handleFormData(data : {username : string, password : string}){
-    this.formUsername = data.username;
-    this.formPassword = data.password;
-     this.authService.registerRequest(this.formUsername, this.formPassword).subscribe({
+    this.authService.register(username, password).subscribe({
       next: () => {
-        this.statusMessage = { message: '', type: ''};
-        this.notification.show('Connected', 'success');
-        this.refresh.triggerRefresh();
-        this.router.navigate(['home']);
+        this.notification.show('Connected !', 'success');
+        this.navigator.closeModal().then(() =>{
+          this.navigator.navigateToHome();
+        });
       },
-      error: (error) => {
-        this.statusMessage = { message: error.error?.error || 'Unknown error', type: 'error' };
-        throw error;
-      },
-      complete: () => {}
+      error: () => {}
     });
   }
 
-  get getStatusMessage() {
-    return this.statusMessage;
+  switchToLogin(): void {
+    this.navigator.openModal('login');
   }
 
-  onLoginClick(){
-    this.router.navigate([{outlets : { modal : ['login']} } ]);
+  closeModal(): void {
+    this.navigator.closeModal()
   }
+
+  isFieldInvalid(filedName: string): boolean{
+    const field = this.registerForm.get(filedName);
+    return !!(field && field.invalid && field.touched)
+  }
+
+  private markAllFiledAsTouched(): void {
+    Object.keys(this.registerForm.controls).forEach(key => {
+      this.registerForm.get(key)?.markAllAsTouched();
+    })
+  }
+
+  get getStatusMessage() {
+    return {
+      message: this.userState.error() || '',
+      type: this.userState.error() ? 'error' : ''
+    };
+  }
+  
 }
