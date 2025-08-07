@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { AuthGuard } from './navigation/guards/authGuard.service';
-import { GuestGuard } from './navigation/guards/guestGuard.service';
-import { HomeComponent } from './components/home/home.component';
-import { LoginComponent } from './components/auth/login/login.component';
-import { RegisterComponent } from './components/auth/register/register.component';
+import { AuthGuard } from './core/navigation/guards/authGuard.service';
+import { GuestGuard } from './core/navigation/guards/guestGuard.service';
+import { HomeComponent } from './features/components/home/home.component';
+import { LoginComponent } from './features/components/auth/login/login.component';
+import { RegisterComponent } from './features/components/auth/register/register.component';
 
 export const routes: Routes = [
     { 

@@ -86,9 +86,6 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 	}
 
 	token, err := pkg.CreateJWT(ctx, req.Username, db)
-	if err == pkg.ErrJWTExpired {
-
-	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please log in again"})
 		return

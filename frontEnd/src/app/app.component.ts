@@ -1,8 +1,8 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NotificationService } from './services/notification/notification.service';
+import { NotificationService } from './core/services/notification/notification.service';
 import { Subscription } from 'rxjs';
-import { ModalState } from './state/modalState.service';
+import { ModalState } from './core/state/modalState.service';
 
 
 @Component({
