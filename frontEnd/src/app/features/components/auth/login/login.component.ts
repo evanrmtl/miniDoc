@@ -1,18 +1,19 @@
 import { Component, inject } from '@angular/core';
-import { AuthService } from '../../../services/auth/auth.service';
-import { NotificationService } from '../../../services/notification/notification.service';
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import { NotificationService } from '../../../../core/services/notification/notification.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigateService } from '../../../navigation/navigation.service';
-import { UserState } from '../../../state/userState.service';
+import { NavigateService } from '../../../../core/navigation/navigation.service';
+import { UserState } from '../../../../core/state/userState.service';
 import { CommonModule } from '@angular/common';
 
+
 @Component({
-  selector: 'app-register',
+  selector: 'app-login',
   imports: [ReactiveFormsModule, CommonModule],
-  templateUrl: './register.component.html',
-  styleUrl: './register.component.scss'
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.scss'
 })
-export class RegisterComponent {
+export class LoginComponent {
 
   private readonly fb: FormBuilder = inject(FormBuilder)
   private readonly authService: AuthService = inject(AuthService) 
@@ -21,22 +22,23 @@ export class RegisterComponent {
 
   readonly userState = inject(UserState)
 
-  readonly registerForm: FormGroup =  this.fb.group({
+  readonly loginForm: FormGroup = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]],
     password: ['', [Validators.required, Validators.minLength(6)]]
   })
 
-  onSubmit(): void {
-    if(this.registerForm.invalid){
-      this.markAllFiledAsTouched()
+  onSubmit(): void{
+    if(this.loginForm.invalid){
+      this.markAllFiledAsTouched();
       return;
     }
-    const {username, password} = this.registerForm.value;
+    
+    const { username, password } = this.loginForm.value;
 
-    this.authService.register(username, password).subscribe({
+    this.authService.login(username, password).subscribe({
       next: () => {
         this.notification.show('Connected !', 'success');
-        this.navigator.closeModal().then(() =>{
+        this.navigator.closeModal().then(() => {
           this.navigator.navigateToHome();
         });
       },
@@ -44,8 +46,8 @@ export class RegisterComponent {
     });
   }
 
-  switchToLogin(): void {
-    this.navigator.openModal('login');
+  switchToRegister(): void {
+    this.navigator.openModal('register')
   }
 
   closeModal(): void {
@@ -53,21 +55,20 @@ export class RegisterComponent {
   }
 
   isFieldInvalid(filedName: string): boolean{
-    const field = this.registerForm.get(filedName);
+    const field = this.loginForm.get(filedName);
     return !!(field && field.invalid && field.touched)
   }
 
   private markAllFiledAsTouched(): void {
-    Object.keys(this.registerForm.controls).forEach(key => {
-      this.registerForm.get(key)?.markAllAsTouched();
+    Object.keys(this.loginForm.controls).forEach(key => {
+      this.loginForm.get(key)?.markAllAsTouched();
     })
   }
 
   get getStatusMessage() {
     return {
       message: this.userState.error() || '',
-      type: this.userState.error() ? 'error' : ''
+      type: 'error'
     };
   }
-  
 }

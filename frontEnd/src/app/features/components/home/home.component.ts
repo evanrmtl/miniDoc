@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { UserState } from '../../state/userState.service';
-import { NavigateService } from '../../navigation/navigation.service';
+import { UserState } from '../../../core/state/userState.service';
+import { NavigateService } from '../../../core/navigation/navigation.service';
 
 @Component({
   selector: 'app-home',
@@ -13,11 +13,13 @@ export class HomeComponent implements OnInit {
   readonly navigator = inject(NavigateService)
 
   ngOnInit(): void {
-    if (this.userState.isLoggedIn()) {
-      this.loadUserData();
-    } else {
-      this.navigator.openModal('login');
-    }
+    this.userState.isLoggedIn().subscribe((isLoggedIn) => {
+      if (isLoggedIn){
+        this.loadUserData;
+      } else {
+        this.navigator.openModal('login')
+      }
+    })
   }
 
   private loadUserData(): void {

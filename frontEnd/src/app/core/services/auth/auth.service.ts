@@ -4,6 +4,7 @@ import { HttpClient } from "@angular/common/http";
 import { catchError, Observable, tap } from "rxjs";
 import { AuthErrorHandlerService } from "./errorHandler/AuthErrorHandler.Service";
 import { ModalState } from "../../state/modalState.service";
+import { WebSocketService } from "../websocket/websocket.service";
 
 @Injectable({
     providedIn : 'root'
@@ -14,6 +15,7 @@ export class AuthService {
     private readonly userState: UserState = inject(UserState)
     private readonly errorHandler: AuthErrorHandlerService = inject(AuthErrorHandlerService)
     private readonly modalState: ModalState = inject(ModalState)
+    private readonly websocket: WebSocketService = inject(WebSocketService)
 
     constructor(private http: HttpClient) {}
 
@@ -45,8 +47,9 @@ export class AuthService {
 
     private handleAuthResponse(res: any, username: string){
         if(res.JWT) {
+            this.userState.removeToken();
             this.userState.setToken(res.JWT);
-            this.userState.setAuthenticated(username, true);
+            this.websocket.connect();
         }
     }
 }
