@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -104,33 +105,41 @@ func createSignature(header string, payload string) (string, error) {
 	return signatureBase64, nil
 }
 
-func ValidJWT(token string, agent string, ctx context.Context, db *gorm.DB) (bool, error) {
+func ValidJWT(token string, agent string, ctx context.Context, db *gorm.DB) error {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return false, errors.New("invalid JWT: incorrect number of segments")
+		return errors.New("invalid JWT: incorrect number of segments")
 	}
-
+	fmt.Println("ici")
 	dataToVerify := parts[0] + "." + parts[1]
 
 	dataToFind, err := base64.RawURLEncoding.DecodeString(parts[2])
 	if err != nil {
-		return false, errors.New("failed to decode signature")
+		return errors.New("failed to decode signature")
 	}
 
-	err = signingMethod.Verify(dataToVerify, dataToFind, os.Getenv("RS256_PUBLIC_KEY"))
+	PEMPublicKey := []byte(strings.ReplaceAll(os.Getenv("RS256_PUBLIC_KEY"), `\n`, "\n"))
+	publicKey, err := golangjwt.ParseRSAPublicKeyFromPEM(PEMPublicKey)
 	if err != nil {
-		return false, errors.New("invalid JWT: incorrect token")
+		return errors.New("failed to parse public key")
 	}
 
+	err = signingMethod.Verify(dataToVerify, dataToFind, publicKey)
+	if err != nil {
+		fmt.Println("dataToVerify : " + dataToVerify)
+		fmt.Println()
+		fmt.Println("dataToFind : " + string(dataToFind))
+		fmt.Println("invalid JWT: incorrect token")
+		return errors.New("invalid JWT: incorrect token")
+	}
 	decodedPayload, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		return false, errors.New("failed to decode payload")
+		return errors.New("failed to decode payload")
 	}
-
 	var payload jwtPayload
 	err = json.Unmarshal(decodedPayload, &payload)
 	if err != nil {
-		return false, errors.New("failed to unmarshall payload")
+		return errors.New("failed to unmarshall payload")
 	}
 
 	if time.Now().Unix() > payload.ExpiresAt {
@@ -140,12 +149,12 @@ func ValidJWT(token string, agent string, ctx context.Context, db *gorm.DB) (boo
 			Where("expires_at > ?", time.Now().Unix()).
 			Find(ctx)
 		if err != nil {
-			return false, errors.New("session lookup failed")
+			return errors.New("session lookup failed")
 		}
 		if len(sessions) > 0 {
-			return false, ErrJWTExpired
+			return ErrJWTExpired
 		}
-		return false, errors.New("token expired and no active session found")
+		return errors.New("token expired and no active session found")
 	}
-	return true, nil
+	return nil
 }

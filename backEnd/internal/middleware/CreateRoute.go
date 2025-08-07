@@ -24,7 +24,7 @@ func CreateRoutes(db *gorm.DB) *gin.Engine {
 	router.Use(cors.New(config))
 
 	subroute.CreateAuthRoutes(router, db)
-	subroute.CreateWSRoute(router)
+	subroute.CreateWSRoute(router, db)
 
 	return router
 }
