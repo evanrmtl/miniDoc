@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RegisterComponent } from './register.component';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { AuthService } from '../../../services/auth/auth.service';
+import { AuthService } from '../../../../core/services/auth/auth.service';
 import { NotificationService } from '../../../../core/services/notification/notification.service';
 import { Router } from '@angular/router';
 
