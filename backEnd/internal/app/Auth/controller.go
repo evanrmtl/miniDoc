@@ -15,16 +15,17 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 	ctx := c.Request.Context()
 
 	var req struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
+		Username string `json:"username" binding:"required,min=3,max=20"`
+		Password string `json:"password" binding:"required,min=6"`
 	}
 
-	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+	err := c.ShouldBindBodyWithJSON(&req)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := Register(ctx, req.Username, req.Password, db)
+	err = Register(ctx, req.Username, req.Password, db)
 	if err != nil {
 		if errors.Is(err, ErrUserExists) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})

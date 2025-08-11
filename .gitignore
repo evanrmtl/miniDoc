@@ -60,3 +60,9 @@ go.work.sum
 
 # Test data
 data.json
+
+
+# Test go
+cpu.prof
+pkg.test
+mem.prof

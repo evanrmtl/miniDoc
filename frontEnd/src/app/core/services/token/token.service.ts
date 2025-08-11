@@ -58,17 +58,6 @@ export class TokenService {
         this.setToken(token);
     }
 
-    isTokenExpired(): boolean {
-        const jwt = this.getToken();
-        if(jwt){
-            const token = this.parseToken(jwt)
-            if(token.expiresAt < Date.now() / 1000){
-                return true;
-            }
-        }
-        return false;
-    }
-
     private getUsername(): string | void {
         const token = this.getToken();
         if (token){

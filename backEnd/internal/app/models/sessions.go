@@ -1,8 +1,7 @@
 package models
 
-const TableNameSession = "session"
+const TableNameSession = "sessions"
 
-// Session mapped from table <session>
 type SessionMigration struct {
 	SessionID uint32 `gorm:"column:session_id;primaryKey" json:"session_id"`
 	UserID    uint32 `gorm:"column:user_id" json:"user_id"`
@@ -11,7 +10,6 @@ type SessionMigration struct {
 	Agent     string `gorm:"column:agent" json:"agent"`
 }
 
-// TableName Session's table name
 func (*SessionMigration) TableName() string {
 	return TableNameSession
 }
@@ -23,8 +21,4 @@ type Session struct {
 	ExpiresAt int64  `gorm:"column:expires_at" json:"expires_at"`
 	Agent     string `gorm:"column:agent" json:"agent"`
 	User      User   `gorm:"foreignKey:UserID"`
-}
-
-func (*Session) TableName() string {
-	return TableNameSession
 }

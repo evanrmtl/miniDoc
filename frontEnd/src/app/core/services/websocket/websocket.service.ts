@@ -75,15 +75,12 @@ export class WebSocketService {
         console.log(message)
         switch(message.type){
             case 'Auth_success':
-                console.log("Auth_success")
                 if (message.data.renewed === true){
                     this.replaceJWT(message.data.token);
                 }
                 break;
             case 'Auth_failed':
-                console.log("Auth_failed")
-                this.eventBus.emit('LOGOUT_REQUEST')
-                this.navigator.openModal('login')
+                this.disconnect()
                 break;
             default:
                 break;

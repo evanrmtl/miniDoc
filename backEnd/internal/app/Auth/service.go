@@ -14,6 +14,8 @@ var ErrUserExists = errors.New("user already exists")
 var ErrUserNotExists = errors.New("user does not exist")
 var ErrIncorrectPassword = errors.New("incorrect password")
 
+// Register the user in the database if the username is not already taken.
+// Return nil, if it was accepted, the error `ErrUserExists` if the username already exist or, err, the error
 func Register(ctx context.Context, username string, password string, db *gorm.DB) error {
 
 	_, err := gorm.G[models.User](db).Where("username = ?", username).First(ctx)
