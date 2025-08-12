@@ -58,11 +58,12 @@ export class WebSocketService {
     private sendAuth(): void {
         const token = this.tokenService.getToken();
         const username = this.tokenService.getParsedToken()?.username;
+        const userID = this.tokenService.getParsedToken()?.userID;
         
         if (token && username) {
             this.socket.send(JSON.stringify({
                 type: "auth", 
-                DataRequest: { token, username }
+                DataRequest: { token, username, userID }
             }));
         } else {
             this.disconnect()
@@ -91,12 +92,6 @@ export class WebSocketService {
 
     replaceJWT(token: string): void {
         this.tokenService.replaceToken(token);
-    }
-
-    sendJWT() {
-        console.log(this.tokenService.getToken())
-        const message: Message = { type: "auth", data: this.tokenService.getToken() || "" };
-        this.socket.send(JSON.stringify(message));
     }
 
     private updateFromSocket(){
