@@ -104,7 +104,6 @@ func TestCreateJWT(t *testing.T) {
 
 	parts := strings.Split(token.Token, ".")
 	require.True(t, len(parts) == 3)
-
 }
 
 func TestCreateSignatureAndValidateSignature(t *testing.T) {
