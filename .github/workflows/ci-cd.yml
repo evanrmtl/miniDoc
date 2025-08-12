@@ -57,5 +57,5 @@ jobs:
         run: go get .
 
       - name: Run Go tests
-        run: go test -v ./...
+        run: go test ./...
   
