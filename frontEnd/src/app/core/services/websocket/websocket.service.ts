@@ -58,11 +58,12 @@ export class WebSocketService {
     private sendAuth(): void {
         const token = this.tokenService.getToken();
         const username = this.tokenService.getParsedToken()?.username;
+        const userID = this.tokenService.getParsedToken()?.userID;
         
         if (token && username) {
             this.socket.send(JSON.stringify({
                 type: "auth", 
-                DataRequest: { token, username }
+                DataRequest: { token, username, userID }
             }));
         } else {
             this.disconnect()
@@ -75,15 +76,12 @@ export class WebSocketService {
         console.log(message)
         switch(message.type){
             case 'Auth_success':
-                console.log("Auth_success")
                 if (message.data.renewed === true){
                     this.replaceJWT(message.data.token);
                 }
                 break;
             case 'Auth_failed':
-                console.log("Auth_failed")
-                this.eventBus.emit('LOGOUT_REQUEST')
-                this.navigator.openModal('login')
+                this.disconnect()
                 break;
             default:
                 break;
@@ -94,12 +92,6 @@ export class WebSocketService {
 
     replaceJWT(token: string): void {
         this.tokenService.replaceToken(token);
-    }
-
-    sendJWT() {
-        console.log(this.tokenService.getToken())
-        const message: Message = { type: "auth", data: this.tokenService.getToken() || "" };
-        this.socket.send(JSON.stringify(message));
     }
 
     private updateFromSocket(){

@@ -19,5 +19,5 @@ type User struct {
 	Username     string      `gorm:"column:username;not null" json:"username"`
 	PasswordHash string      `gorm:"column:password_hash;not null" json:"password_hash"`
 	UsersFiles   []UsersFile `gorm:"foreignKey:UserID"`
-	Sessions     []Session   `gorm:"foreignKey:UserID"`
+	Session      []Session   `gorm:"foreignKey:UserID"`
 }

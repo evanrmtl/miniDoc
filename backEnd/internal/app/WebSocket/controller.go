@@ -85,6 +85,7 @@ func processAuthRequest(msg []byte, socket Socket, db *gorm.DB) {
 	type DataRequest struct {
 		Token    string
 		Username string
+		UserID   uint32
 	}
 
 	var data struct {
@@ -97,21 +98,23 @@ func processAuthRequest(msg []byte, socket Socket, db *gorm.DB) {
 		return
 	}
 
+	ctx := socket.c.Request.Context()
 	agent := socket.c.Request.UserAgent()
 
-	err = pkg.ValidJWT(data.DataRequest.Token, agent, socket.c.Request.Context(), db)
+	err = pkg.ValidJWT(data.DataRequest.Token, agent, ctx, db)
 
 	if err != nil && !errors.Is(err, pkg.ErrJWTExpired) {
 		socket.sendAuthError()
 		return
-
 	}
+
+	pkg.CreateSession(data.DataRequest.UserID, agent, ctx, db)
+
 	if errors.Is(err, pkg.ErrJWTExpired) {
-		newToken, err := pkg.CreateJWT(socket.c.Request.Context(), data.DataRequest.Username, db)
+		newToken, err := pkg.CreateJWT(ctx, data.DataRequest.Username, db)
 		if err != nil {
 			socket.sendAuthError()
 			return
-
 		}
 
 		response := AuthResponse{

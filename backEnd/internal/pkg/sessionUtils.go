@@ -34,18 +34,19 @@ func CreateSession(userID uint32, agent string, ctx context.Context, db *gorm.DB
 		}
 		return
 	}
-	err = UpdateSessionTime(session, ctx, db)
+	err = UpdateSessionTime(&session, ctx, db)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 }
 
-func UpdateSessionTime(session models.Session, ctx context.Context, db *gorm.DB) error {
+func UpdateSessionTime(session *models.Session, ctx context.Context, db *gorm.DB) error {
+	newExpiration := time.Now().Add(time.Hour * 24 * 15).Unix()
 	_, err := gorm.G[models.Session](db).
 		Where("session_id = ?", session.SessionID).
 		Updates(ctx, models.Session{
-			ExpiresAt: time.Now().Add(time.Hour * 24 * 15).Unix(),
+			ExpiresAt: newExpiration,
 		})
 	if err != nil {
 		return errors.New("error on update time")
@@ -54,13 +55,29 @@ func UpdateSessionTime(session models.Session, ctx context.Context, db *gorm.DB)
 }
 
 func DeleteExpiredSession(ctx context.Context, db *gorm.DB) {
+	ticker := time.NewTicker(time.Hour * 24)
+	defer ticker.Stop()
+
+	deleteExpiredSessions(ctx, db)
+
 	for {
-		_, err := gorm.G[models.Session](db).
-			Where("expires_at < ?", time.Now().Unix()).
-			Delete(ctx)
-		if err != nil {
-			fmt.Println("Error deleting expired sessions:", err.Error())
+		select {
+		case <-ctx.Done():
+			fmt.Println("DeleteExpiredSession stopped:", ctx.Err())
+			return
+
+		case <-ticker.C:
+			deleteExpiredSessions(ctx, db)
 		}
-		time.Sleep(time.Hour * 24)
+	}
+}
+
+func deleteExpiredSessions(ctx context.Context, db *gorm.DB) {
+	_, err := gorm.G[models.Session](db).
+		Where("expires_at < ?", time.Now().Unix()).
+		Delete(ctx)
+	if err != nil {
+		fmt.Printf("Error deleting expired sessions: %v\n", err)
+		return
 	}
 }

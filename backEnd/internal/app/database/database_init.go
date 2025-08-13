@@ -53,7 +53,7 @@ func GenerateDB() *gorm.DB {
 		log.Printf("Warning: constraint fk_users_files_file_id already exist or error while creating it : %v", err)
 	}
 
-	err = db.Exec("ALTER TABLE session ADD CONSTRAINT fk_session_user_id FOREIGN KEY (user_id) REFERENCES users(user_id)").Error
+	err = db.Exec("ALTER TABLE sessions ADD CONSTRAINT fk_session_user_id FOREIGN KEY (user_id) REFERENCES users(user_id)").Error
 	if err != nil {
 		log.Printf("Warning: constraint fk_session_user_id already exist or error while creating it : %v", err)
 	}
