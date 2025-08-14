@@ -37,7 +37,7 @@ jobs:
       - name: Success
         run: echo "✅ Angular frontend tests passed!"
 
-    test-go:
+  test-go:
     runs-on: ubuntu-latest
 
     defaults:
