@@ -1,7 +1,7 @@
 package subroute
 
 import (
-	websocket "github.com/evanrmtl/miniDoc/internal/app/WebSocket"
+	websocket "github.com/evanrmtl/miniDoc/internal/app/websocket"
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"

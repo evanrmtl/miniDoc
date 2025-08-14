@@ -118,3 +118,10 @@ func GetDSN() string {
 	return fmt.Sprintf("host=%s port=%s user=postgres password=password dbname=testdb sslmode=disable",
 		host, port.Port())
 }
+
+func InsertOneUser() {
+	result := DB.Exec("INSERT INTO users (username, password_hash) VALUES (?, ?)", "test", "test123")
+	if result.Error != nil {
+		panic(fmt.Sprintf("Failed to create  user: %v", result.Error))
+	}
+}

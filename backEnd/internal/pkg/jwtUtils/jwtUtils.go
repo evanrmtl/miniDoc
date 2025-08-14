@@ -1,4 +1,4 @@
-package pkg
+package jwtUtils
 
 import (
 	"context"
@@ -28,9 +28,7 @@ type jwtPayload struct {
 	ExpiresAt int64  `json:"expiresAt"`
 }
 
-type JWTToken struct {
-	Token string
-}
+type JWTToken = string
 
 var signingMethod = golangjwt.SigningMethodRSA{
 	Name: "generateSignature",
@@ -95,7 +93,7 @@ func CreateJWT(ctx context.Context, username string, db *gorm.DB) (JWTToken, err
 	}
 
 	fullJWT := headerBase64 + "." + payloadBase64 + "." + signatureBase64
-	jwtToken.Token = fullJWT
+	jwtToken = fullJWT
 
 	return jwtToken, nil
 }

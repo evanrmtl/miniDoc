@@ -9,14 +9,15 @@ import (
 	"syscall"
 	"time"
 
-	generate "github.com/evanrmtl/miniDoc/internal/app/database"
+	database "github.com/evanrmtl/miniDoc/internal/app/database"
 	routes "github.com/evanrmtl/miniDoc/internal/middleware"
-	"github.com/evanrmtl/miniDoc/internal/pkg"
+	redisUtils "github.com/evanrmtl/miniDoc/internal/pkg/redisUtils"
+	sessionsUtils "github.com/evanrmtl/miniDoc/internal/pkg/sessionUtils"
 )
 
 func main() {
 
-	db := generate.GenerateDB()
+	db := database.GenerateDB()
 	_, err := db.DB()
 	if err != nil {
 		log.Panicf("error when connecting to the Database: %s", err.Error())
@@ -25,9 +26,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go pkg.DeleteExpiredSession(ctx, db)
+	go sessionsUtils.DeleteExpiredSession(ctx, db)
 
 	srv := &http.Server{Addr: ":3000", Handler: routes.CreateRoutes(db)}
+
+	redisUtils.CreateRedis(ctx)
+
 	go func() {
 		err := srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {

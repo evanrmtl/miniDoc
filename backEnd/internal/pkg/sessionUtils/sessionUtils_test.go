@@ -1,8 +1,14 @@
-package pkg
+package sessionsUtils
 
 import (
+	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -12,9 +18,60 @@ import (
 	"gorm.io/gorm"
 )
 
+func TestMain(m *testing.M) {
+	setupTestRS256KeyPair()
+
+	err := testenv.Setup()
+	if err != nil {
+		panic(err)
+	}
+
+	testenv.InsertOneUser()
+
+	code := m.Run()
+
+	testenv.Teardown()
+
+	os.Exit(code)
+}
+
+func setupTestRS256KeyPair() {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate  privateRSA key: %v", err))
+	}
+
+	privateKeyDER := x509.MarshalPKCS1PrivateKey(privateKey)
+
+	privateKeyPEM := &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privateKeyDER,
+	}
+
+	var privateKeyBuf bytes.Buffer
+	pem.Encode(&privateKeyBuf, privateKeyPEM)
+
+	publicKey := privateKey.PublicKey
+	publicKeyDER, err := x509.MarshalPKIXPublicKey(&publicKey)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate  publicRSA key: %v", err))
+	}
+
+	publicKeyPEM := &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: publicKeyDER,
+	}
+
+	var publicKeyBuf bytes.Buffer
+	pem.Encode(&publicKeyBuf, publicKeyPEM)
+
+	os.Setenv("RS256_PRIVATE_KEY", privateKeyBuf.String())
+	os.Setenv("RS256_PUBLIC_KEY", publicKeyBuf.String())
+}
+
 func TestCreateSessionAndUpdate(t *testing.T) {
 	testenv.CleanTables()
-	insertOneUser()
+	testenv.InsertOneUser()
 
 	db := testenv.DB
 	userAgent := "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
@@ -52,7 +109,7 @@ func TestCreateSessionAndUpdate(t *testing.T) {
 
 func TestDeleteExpiredSession(t *testing.T) {
 	testenv.CleanTables()
-	insertOneUser()
+	testenv.InsertOneUser()
 
 	db := testenv.DB
 	userAgent := "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
@@ -108,7 +165,7 @@ func TestDeleteExpiredSession(t *testing.T) {
 func BenchmarkCreateSession(b *testing.B) {
 
 	testenv.CleanTables()
-	insertOneUser()
+	testenv.InsertOneUser()
 
 	db := testenv.DB
 	ctx := context.Background()
@@ -128,7 +185,7 @@ func BenchmarkCreateSession(b *testing.B) {
 
 func BenchmarkDeleteExpiredSessions(b *testing.B) {
 	testenv.CleanTables()
-	insertOneUser()
+	testenv.InsertOneUser()
 
 	db := testenv.DB
 	userAgent := "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
