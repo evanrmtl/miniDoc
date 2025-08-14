@@ -24,7 +24,6 @@ func (manager *ConnectionManager) writePump() {
 	}()
 
 	for {
-
 		select {
 		case message, ok := <-manager.send:
 			{
