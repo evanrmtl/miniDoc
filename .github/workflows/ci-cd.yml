@@ -1,4 +1,4 @@
-name: Angular CRDT Tests
+name: miniDoc test
 
 on:
   push:
@@ -36,12 +36,24 @@ jobs:
 
       - name: Success
         run: echo "✅ Angular frontend tests passed!"
-  test-go:
+
+    test-go:
     runs-on: ubuntu-latest
 
     defaults:
       run:
         working-directory: ./backEnd
+
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -53,9 +65,27 @@ jobs:
           go-version: '1.21'
           cache: true
 
+      - name: Wait for Redis
+        run: |
+          until nc -z 127.0.0.1 6379; do
+            echo "Waiting for Redis..."
+            sleep 1
+          done
+          echo "✅ Redis is ready!"
+
       - name: Install dependencies
         run: go get .
 
       - name: Run Go tests
-        run: go test ./...
-  
+        env:
+          REDIS_HOST: "127.0.0.1"
+          REDIS_PORT: "6379"
+          REDIS_DB: "1"
+          REDIS_PASSWORD: ""
+          SERVER_ID: "ci-server-1"
+          GO_ENV: "testing"
+        run: go test ./... -v
+
+      - name: Success
+        run: echo "✅ Go backend tests with Redis passed!"
+
