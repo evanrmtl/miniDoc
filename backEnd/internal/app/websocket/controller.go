@@ -23,7 +23,7 @@ type Socket struct {
 	ctx  *gin.Context
 }
 
-type AuthResponse struct {
+type Response struct {
 	Type string      `json:"type"`
 	Data interface{} `json:"data"`
 }
@@ -52,7 +52,8 @@ type ConnectionManager struct {
 	send         chan []byte
 	connections  *SafeConnectionPool
 	pingInterval time.Duration
-	pongTimeout  time.Duration
+	writeTimeout time.Duration
+	readTimeout  time.Duration
 }
 
 type SafeConnectionPool struct {
@@ -84,6 +85,7 @@ func WebSocketHandler(c *gin.Context, db *gorm.DB) {
 		socket: Socket{conn: conn, ctx: c},
 		client: ClientData{},
 	}
+	log.Println("🟢 WebSocket handler ouvert")
 
 	defer func() {
 		log.Println("🔴 WebSocket handler terminé, fermeture connexion")
@@ -94,8 +96,9 @@ func WebSocketHandler(c *gin.Context, db *gorm.DB) {
 		clientSocket: clientSocket,
 		send:         make(chan []byte),
 		connections:  sConnectionPool,
-		pingInterval: time.Second * 25,
-		pongTimeout:  time.Second * 5,
+		pingInterval: time.Second * 30,
+		readTimeout:  time.Second * 60,
+		writeTimeout: time.Second * 10,
 	}
 
 	manager.Start(db)
@@ -108,9 +111,9 @@ func (manager *ConnectionManager) Start(db *gorm.DB) {
 	go manager.readPump(db)
 
 	<-manager.ctx.Done()
-
+	log.Println("pool avant localDelete:", manager.connections.pool)
 	manager.deleteLocal()
-	ctx := context.Background()
-	manager.clientSocket.deleteSessionInRedis(ctx)
-	ctx.Done()
+	Cleanupctx := context.Background()
+	manager.clientSocket.deleteSessionInRedis(Cleanupctx)
+	log.Println("pool apres localDelete:", manager.connections.pool)
 }

@@ -4,7 +4,7 @@ import { AuthEventBus } from "../../events/authEvent/authEvent.service";
 
 export interface Token {
     username: string;
-    userID: number;
+    userId: number;
     iat: number;
     expiresAt: number;
 }

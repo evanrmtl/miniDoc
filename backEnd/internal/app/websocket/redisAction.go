@@ -33,5 +33,8 @@ func (cs *ClientSocket) storeSessionInRedis(ctx context.Context) {
 
 func (cs *ClientSocket) deleteSessionInRedis(ctx context.Context) {
 	redisConn := redisUtils.GetRedisClient()
-	redisConn.HDel(ctx, cs.client.SessionID, "server_id", "user_id", "docs_id", "session_id")
+	err := redisConn.Del(ctx, "session:"+cs.client.SessionID).Err()
+	if err != nil {
+		log.Println("Error deleting redis Hash")
+	}
 }

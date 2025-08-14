@@ -12,12 +12,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var newLine = []byte{'\n'}
-
 func (manager *ConnectionManager) writePump() {
 	websocketConnection := manager.clientSocket.socket.conn
 
-	ticker := *time.NewTicker(manager.pingInterval)
+	ticker := time.NewTicker(manager.pingInterval)
 
 	defer func() {
 		ticker.Stop()
@@ -25,35 +23,34 @@ func (manager *ConnectionManager) writePump() {
 		manager.cancel()
 	}()
 
-	writeDeadline := time.Now().Add(time.Second * 5)
-
 	for {
+
 		select {
 		case message, ok := <-manager.send:
 			{
+				writeDeadline := time.Now().Add(time.Second * 5)
 				websocketConnection.SetWriteDeadline(writeDeadline)
 				if !ok {
 					return
 				}
 
-				w, err := websocketConnection.NextWriter(websocket.BinaryMessage)
+				w, err := websocketConnection.NextWriter(websocket.TextMessage)
+				if err != nil {
+					return
+				}
+				_, err = w.Write(message)
 				if err != nil {
 					return
 				}
 
-				n := len(manager.send)
-				for i := 0; i < n; i++ {
-					w.Write(newLine)
-					w.Write(<-manager.send)
-				}
-
-				_, err = w.Write(message)
+				err = w.Close()
 				if err != nil {
 					return
 				}
 			}
 		case <-ticker.C:
 			{
+				writeDeadline := time.Now().Add(time.Second * 5)
 				websocketConnection.SetWriteDeadline(writeDeadline)
 				err := websocketConnection.WriteMessage(websocket.PingMessage, nil)
 				if err != nil {
@@ -67,16 +64,15 @@ func (manager *ConnectionManager) writePump() {
 func (manager *ConnectionManager) readPump(db *gorm.DB) {
 	websocketConnection := manager.clientSocket.socket.conn
 
-	ticker := *time.NewTicker(manager.pongTimeout)
+	websocketConnection.SetReadDeadline(time.Now().Add(manager.readTimeout))
 
 	defer func() {
-		ticker.Stop()
 		websocketConnection.Close()
 		manager.cancel()
 	}()
 
 	websocketConnection.SetPongHandler(func(appData string) error {
-		err := websocketConnection.SetReadDeadline(time.Now().Add(time.Second * 5))
+		err := websocketConnection.SetReadDeadline(time.Now().Add(manager.readTimeout))
 		return err
 	})
 
@@ -85,21 +81,18 @@ func (manager *ConnectionManager) readPump(db *gorm.DB) {
 		if err != nil {
 			return
 		}
-		go manager.clientSocket.handleIncomingMessage(messageType, msg, db)
+		go manager.clientSocket.handleIncomingMessage(messageType, msg, db, manager.send)
 	}
 }
 
-func (cs *ClientSocket) handleIncomingMessage(messageType int, msg []byte, db *gorm.DB) {
+func (cs *ClientSocket) handleIncomingMessage(messageType int, msg []byte, db *gorm.DB, sendChan chan []byte) {
 	switch messageType {
 	case websocket.TextMessage:
-		cs.handleTextMessage(msg, db)
-	case websocket.PongMessage:
-
+		cs.handleTextMessage(msg, db, sendChan)
 	}
-
 }
 
-func (cs *ClientSocket) handleTextMessage(msg []byte, db *gorm.DB) {
+func (cs *ClientSocket) handleTextMessage(msg []byte, db *gorm.DB, sendChan chan []byte) {
 	var messageType struct {
 		Type string
 	}
@@ -110,12 +103,11 @@ func (cs *ClientSocket) handleTextMessage(msg []byte, db *gorm.DB) {
 	}
 	switch messageType.Type {
 	case "auth":
-		cs.handleAuthentication(msg, db)
+		cs.handleAuthentication(msg, db, sendChan)
 	}
 }
 
-func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB) {
-	socketConnection := cs.socket.conn
+func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan chan []byte) {
 
 	var authMessage struct {
 		ClientData ClientData `json:"data"`
@@ -133,67 +125,62 @@ func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB) {
 	err = jwtUtils.ValidJWT(authMessage.ClientData.Token, agent, ctx, db)
 
 	if err != nil && !errors.Is(err, jwtUtils.ErrJWTExpired) {
-		cs.sendAuthError()
+		cs.sendResponse(sendChan, MessageTypeAuthFailed, nil)
 		return
 	}
 
 	sessionsUtils.CreateSession(authMessage.ClientData.UserID, agent, ctx, db)
 
+	cs.client = ClientData{
+		Token:     authMessage.ClientData.Token,
+		Username:  authMessage.ClientData.Username,
+		UserID:    authMessage.ClientData.UserID,
+		SessionID: authMessage.ClientData.SessionID,
+	}
+
 	if errors.Is(err, jwtUtils.ErrJWTExpired) {
 		newToken, err := jwtUtils.CreateJWT(ctx, authMessage.ClientData.Username, db)
 		if err != nil {
-			cs.sendAuthError()
+			cs.sendResponse(sendChan, MessageTypeAuthFailed, nil)
 			return
 		}
 
-		response := AuthResponse{
-			Type: MessageTypeAuthSuccess,
-			Data: AuthSuccessData{
-				Token:   newToken,
-				Renewed: true,
-			},
+		data := AuthSuccessData{
+			Token:   newToken,
+			Renewed: true,
 		}
 
-		err = socketConnection.WriteJSON(response)
-		if err != nil {
-			log.Println("Failed to send auth success")
-		}
-
-		cs.client = ClientData{
-			Token:     authMessage.ClientData.Token,
-			Username:  authMessage.ClientData.Username,
-			UserID:    authMessage.ClientData.UserID,
-			SessionID: authMessage.ClientData.SessionID,
-		}
+		cs.sendResponse(sendChan, MessageTypeAuthSuccess, data)
 
 		cs.storeSessionInRedis(ctx)
 		cs.storeLocalConnection(authMessage.ClientData.SessionID)
 		return
 	}
 
-	response := AuthResponse{
-		Type: MessageTypeAuthSuccess,
-		Data: AuthSuccessData{
-			Renewed: false,
-		},
+	data := AuthSuccessData{
+		Renewed: false,
 	}
 
-	err = socketConnection.WriteJSON(response)
-	if err != nil {
-		log.Println("Failed to send auth success")
-	}
-
+	cs.sendResponse(sendChan, MessageTypeAuthSuccess, data)
 	cs.storeSessionInRedis(ctx)
 	cs.storeLocalConnection(authMessage.ClientData.SessionID)
 }
 
-func (cs *ClientSocket) sendAuthError() {
-	response := AuthResponse{
-		Type: MessageTypeAuthFailed,
-		Data: nil,
+func (cs *ClientSocket) sendResponse(sendChan chan []byte, msgType string, data interface{}) {
+	response := Response{
+		Type: msgType,
+		Data: data,
 	}
-	err := cs.socket.conn.WriteJSON(response)
+
+	jsonData, err := json.Marshal(response)
 	if err != nil {
-		log.Println("Failed to send auth error")
+		log.Printf("Marshal error: %v", err)
+		return
+	}
+
+	select {
+	case sendChan <- jsonData:
+	default:
+		log.Printf("Failed to send %s: channel full", msgType)
 	}
 }

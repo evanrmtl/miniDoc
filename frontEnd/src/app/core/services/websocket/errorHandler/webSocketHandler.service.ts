@@ -1,7 +1,7 @@
 import { inject, Injectable } from "@angular/core";
 import { NotificationService } from "../../notification/notification.service";
-import { UserState } from "../../../state/userState.service";
 import { AuthEventBus } from "../../../events/authEvent/authEvent.service";
+import { every } from "rxjs";
 
 @Injectable({
     providedIn: 'root'
@@ -11,7 +11,7 @@ export class WebSocketErrorHandler {
     readonly notification: NotificationService = inject(NotificationService);
     readonly authEvent: AuthEventBus = inject(AuthEventBus);
 
-    handleWebSocketError(error: Event | CloseEvent): void {
+    handleWebSocketError(error: Event | CloseEvent | string): void {
         let userMessage: string;
     
         if (error instanceof CloseEvent) {
@@ -39,8 +39,10 @@ export class WebSocketErrorHandler {
                     userMessage = "Connection interrupted, attempting to reconnect...";
             }
         }
-        else {
+        else if (error instanceof Event){
             userMessage = "Network connection issue";
+        } else {
+            userMessage = error
         }
         this.notification.show(userMessage, 'error')
     }
