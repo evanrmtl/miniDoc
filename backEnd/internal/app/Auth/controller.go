@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/evanrmtl/miniDoc/internal/app/models"
-	"github.com/evanrmtl/miniDoc/internal/pkg"
+	"github.com/evanrmtl/miniDoc/internal/pkg/jwtUtils"
+	sessionsUtils "github.com/evanrmtl/miniDoc/internal/pkg/sessionUtils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -35,7 +36,7 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	token, err := pkg.CreateJWT(ctx, req.Username, db)
+	token, err := jwtUtils.CreateJWT(ctx, req.Username, db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please try again"})
 		return
@@ -44,7 +45,7 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusCreated,
 		gin.H{
 			"success": "User created",
-			"JWT":     token.Token,
+			"JWT":     token,
 		},
 	)
 
@@ -55,7 +56,7 @@ func RegisterController(c *gin.Context, db *gorm.DB) {
 
 	agentUsed := c.GetHeader("User-Agent")
 
-	pkg.CreateSession(currUser.UserID, agentUsed, ctx, db)
+	sessionsUtils.CreateSession(currUser.UserID, agentUsed, ctx, db)
 }
 
 func LoginController(c *gin.Context, db *gorm.DB) {
@@ -86,7 +87,7 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	token, err := pkg.CreateJWT(ctx, req.Username, db)
+	token, err := jwtUtils.CreateJWT(ctx, req.Username, db)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't connect, please log in again"})
 		return
@@ -95,7 +96,7 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusAccepted,
 		gin.H{
 			"success": "User connected",
-			"JWT":     token.Token,
+			"JWT":     token,
 		},
 	)
 
@@ -106,5 +107,5 @@ func LoginController(c *gin.Context, db *gorm.DB) {
 
 	agentUsed := c.GetHeader("User-Agent")
 
-	pkg.CreateSession(currUser.UserID, agentUsed, ctx, db)
+	sessionsUtils.CreateSession(currUser.UserID, agentUsed, ctx, db)
 }

@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { Subject } from "rxjs";
 
 interface AuthEvent<T extends any>{
-    type: 'LOGOUT_REQUEST' | 'UNAUTHENTICATION_REQUEST' | 'AUTHENTICATION_REQUEST';
+    type: 'LOGOUT_REQUEST' | 'UNAUTHENTICATION_REQUEST' | 'AUTHENTICATION_REQUEST' | 'IS_LOGINED_IN';
     timestamp: number;
     data?: T;
 }
@@ -20,7 +20,7 @@ export class AuthEventBus {
         this._event.next({
             type,
             timestamp,
-            data
+            data,
         })
     }
 }

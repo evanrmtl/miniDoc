@@ -1,4 +1,4 @@
-package pkg
+package jwtUtils
 
 import (
 	"bytes"
@@ -32,20 +32,13 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	insertOneUser()
+	testenv.InsertOneUser()
 
 	code := m.Run()
 
 	testenv.Teardown()
 
 	os.Exit(code)
-}
-
-func insertOneUser() {
-	result := testenv.DB.Exec("INSERT INTO users (username, password_hash) VALUES (?, ?)", "test", "test123")
-	if result.Error != nil {
-		panic(fmt.Sprintf("Failed to create  user: %v", result.Error))
-	}
 }
 
 func setupTestRS256KeyPair() {
@@ -55,9 +48,6 @@ func setupTestRS256KeyPair() {
 	}
 
 	privateKeyDER := x509.MarshalPKCS1PrivateKey(privateKey)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to generate  privateDER key: %v", err))
-	}
 
 	privateKeyPEM := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
@@ -102,7 +92,7 @@ func TestCreateJWT(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
-	parts := strings.Split(token.Token, ".")
+	parts := strings.Split(token, ".")
 	require.True(t, len(parts) == 3)
 }
 
@@ -184,7 +174,7 @@ func TestCreateSignatureAndValidateSignature(t *testing.T) {
 	err = ValidJWT(expiredTokenWithValidSession, userAgent, ctx, testenv.DB)
 	require.True(t, errors.Is(err, ErrJWTExpired))
 	testenv.CleanTables()
-	insertOneUser()
+	testenv.InsertOneUser()
 
 	// CASE: Expired token with expired session in database
 	db.Exec("INSERT INTO sessions (user_id, created_at, expires_at, agent) VALUES (?, ?, ?, ?)",
@@ -247,7 +237,7 @@ func BenchmarkJWTOperations(b *testing.B) {
 
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			err := ValidJWT(token.Token, userAgent, ctx, db)
+			err := ValidJWT(token, userAgent, ctx, db)
 			if err != nil {
 				b.Fatal(err)
 			}

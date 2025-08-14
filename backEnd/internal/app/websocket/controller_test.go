@@ -19,24 +19,21 @@ import (
 	"time"
 
 	"github.com/evanrmtl/miniDoc/internal/app/models"
+	websocket "github.com/evanrmtl/miniDoc/internal/app/websocket"
 	"github.com/evanrmtl/miniDoc/internal/middleware/subroute"
-	"github.com/evanrmtl/miniDoc/internal/pkg"
+	"github.com/evanrmtl/miniDoc/internal/pkg/jwtUtils"
+	"github.com/evanrmtl/miniDoc/internal/pkg/redisUtils"
 	testenv "github.com/evanrmtl/miniDoc/testEnv"
 	"github.com/gin-gonic/gin"
 	golangjwt "github.com/golang-jwt/jwt/v5"
-	"github.com/gorilla/websocket"
+	gorillaws "github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
-type AuthSuccessData struct {
-	Token   string `json:"token,omitempty"`
-	Renewed bool   `json:"renewed"`
-}
-
 var responseSuccessObj struct {
-	Type string          `json:"type"`
-	Data AuthSuccessData `json:"data"`
+	Type string                    `json:"type"`
+	Data websocket.AuthSuccessData `json:"data"`
 }
 
 var responseObj struct {
@@ -51,6 +48,8 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
+
+	redisUtils.CreateRedis(context.Background())
 	setupTestRS256KeyPair()
 
 	ts = httptest.NewServer(createTestRoute())
@@ -83,36 +82,36 @@ func TestWebSocketAuth(t *testing.T) {
 
 	url := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
 
-	ws, _, err := websocket.DefaultDialer.Dial(url, header)
+	ws, _, err := gorillaws.DefaultDialer.Dial(url, header)
 	require.NoError(t, err)
 	defer ws.Close()
 
 	fmt.Print("websocket test")
 
 	// CASE Empty db
-	authMsg := `{"type":"auth","DataRequest":{"Token":"token_test","Username":"user"}}`
+	authMsg := `{"type":"auth","data":{"Token":"token_test","Username":"user","SessionID":"123456-123456-123456"}}`
 
-	err = ws.WriteMessage(websocket.TextMessage, []byte(authMsg))
+	err = ws.WriteMessage(gorillaws.TextMessage, []byte(authMsg))
 	require.NoError(t, err)
 
 	_, resp, err := ws.ReadMessage()
 	require.NoError(t, err)
 
 	require.NoError(t, json.Unmarshal(resp, &responseObj))
-	require.Equal(t, "Auth_failed", responseObj.Type)
+	require.Equal(t, websocket.MessageTypeAuthFailed, responseObj.Type)
 
 	// CASE User exist but no session linked to him
 	insertOneUser()
-	authMsg = `{"type":"auth","DataRequest":{"Token": "test_token","Username":"test"}}`
+	authMsg = `{"type":"auth","data":{"Token": "test_token","Username":"test","SessionID":"123456-123456-123456"}}`
 
-	err = ws.WriteMessage(websocket.TextMessage, []byte(authMsg))
+	err = ws.WriteMessage(gorillaws.TextMessage, []byte(authMsg))
 	require.NoError(t, err)
 
 	_, resp, err = ws.ReadMessage()
 	require.NoError(t, err)
 
 	require.NoError(t, json.Unmarshal(resp, &responseObj))
-	require.Equal(t, "Auth_failed", responseObj.Type)
+	require.Equal(t, websocket.MessageTypeAuthFailed, responseObj.Type)
 
 	// CASE User exist with valid and not expired JWT and a session not expired
 	testUser, err := gorm.G[models.User](db).Where("username = ?", "test").First(t.Context())
@@ -124,12 +123,12 @@ func TestWebSocketAuth(t *testing.T) {
 
 	db.Exec("INSERT INTO sessions (user_id, created_at, expires_at, agent) VALUES (?, ?, ?, ?)", userID, initTime-300, initTime+300, userAgent)
 
-	jwt, err := pkg.CreateJWT(t.Context(), "test", db)
+	jwt, err := jwtUtils.CreateJWT(t.Context(), "test", db)
 	require.NoError(t, err)
 
-	authMsg = fmt.Sprintf(`{"type":"auth","DataRequest":{"Token": "%s","Username":"test"}}`, jwt.Token)
+	authMsg = fmt.Sprintf(`{"type":"auth","data":{"Token": "%s","Username":"test", "SessionID":"123456-123456-123456"}}`, jwt)
 
-	err = ws.WriteMessage(websocket.TextMessage, []byte(authMsg))
+	err = ws.WriteMessage(gorillaws.TextMessage, []byte(authMsg))
 	require.NoError(t, err)
 
 	time.Sleep(time.Second)
@@ -138,7 +137,7 @@ func TestWebSocketAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, json.Unmarshal(resp, &responseSuccessObj))
-	require.Equal(t, "Auth_success", responseSuccessObj.Type)
+	require.Equal(t, websocket.MessageTypeAuthSuccess, responseSuccessObj.Type)
 	data := responseSuccessObj.Data
 	require.Equal(t, false, data.Renewed)
 
@@ -146,49 +145,52 @@ func TestWebSocketAuth(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, sessionUsed.ExpiresAt > initTime)
 
-	// CASE User exist, a session, but an expired valid JWT
+	// CASE User exist, a session exist, but an expired valid JWT
 
 	currTime := time.Now().Unix()
 	jwt, err = createJWTWithCustomExpiry(t.Context(), "test", currTime-300, db)
+
 	require.NoError(t, err)
 
-	authMsg = fmt.Sprintf(`{"type":"auth","DataRequest":{"Token": "%s","Username":"test"}}`, jwt.Token)
+	authMsg = fmt.Sprintf(`{"type":"auth","data":{"Token": "%s","Username":"test", "SessionID":"123456-123456-123456"}}`, jwt)
 
-	err = ws.WriteMessage(websocket.TextMessage, []byte(authMsg))
+	err = ws.WriteMessage(gorillaws.TextMessage, []byte(authMsg))
 	require.NoError(t, err)
 
 	_, resp, err = ws.ReadMessage()
 	require.NoError(t, err)
 
 	require.NoError(t, json.Unmarshal(resp, &responseSuccessObj))
-	require.Equal(t, "Auth_success", responseSuccessObj.Type)
+	require.Equal(t, websocket.MessageTypeAuthSuccess, responseSuccessObj.Type)
 	data = responseSuccessObj.Data
 	require.Equal(t, true, data.Renewed)
-	err = pkg.ValidJWT(data.Token, userAgent, t.Context(), db)
+	err = jwtUtils.ValidJWT(data.Token, userAgent, t.Context(), db)
 	require.NoError(t, err)
 
 	// CASE incorrect JWT
 
 	currTime = time.Now().Unix()
 	jwt, err = createJWTWithCustomExpiry(t.Context(), "test", currTime-300, db)
+	fmt.Println(jwt)
+
 	require.NoError(t, err)
 
-	if jwt.Token[1] == 'A' {
-		jwt.Token = jwt.Token[:1] + "B" + jwt.Token[2:]
+	if jwt[1] == 'A' {
+		jwt = jwt[:1] + "B" + jwt[2:]
 	} else {
-		jwt.Token = jwt.Token[:1] + "A" + jwt.Token[2:]
+		jwt = jwt[:1] + "A" + jwt[2:]
 	}
 
-	authMsg = fmt.Sprintf(`{"type":"auth","DataRequest":{"Token": "%s","Username":"test"}}`, jwt.Token)
+	authMsg = fmt.Sprintf(`{"type":"auth","data":{"Token": "%s","Username":"test", "SessionID":"123456-123456-123456"}}`, jwt)
 
-	err = ws.WriteMessage(websocket.TextMessage, []byte(authMsg))
+	err = ws.WriteMessage(gorillaws.TextMessage, []byte(authMsg))
 	require.NoError(t, err)
 
 	_, resp, err = ws.ReadMessage()
 	require.NoError(t, err)
 
-	require.NoError(t, json.Unmarshal(resp, &responseSuccessObj))
-	require.Equal(t, "Auth_failed", responseSuccessObj.Type)
+	require.NoError(t, json.Unmarshal(resp, &responseObj))
+	require.Equal(t, websocket.MessageTypeAuthFailed, responseObj.Type)
 }
 
 func insertOneUser() {
@@ -205,9 +207,6 @@ func setupTestRS256KeyPair() {
 	}
 
 	privateKeyDER := x509.MarshalPKCS1PrivateKey(privateKey)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to generate  privateDER key: %v", err))
-	}
 
 	privateKeyPEM := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
@@ -235,8 +234,8 @@ func setupTestRS256KeyPair() {
 	os.Setenv("RS256_PUBLIC_KEY", publicKeyBuf.String())
 }
 
-func createJWTWithCustomExpiry(ctx context.Context, username string, expireTime int64, db *gorm.DB) (pkg.JWTToken, error) {
-	var jwtToken pkg.JWTToken
+func createJWTWithCustomExpiry(ctx context.Context, username string, expireTime int64, db *gorm.DB) (jwtUtils.JWTToken, error) {
+	var jwtToken jwtUtils.JWTToken
 
 	type jwtHeader struct {
 		Alg string `json:"alg"`
@@ -257,14 +256,14 @@ func createJWTWithCustomExpiry(ctx context.Context, username string, expireTime 
 
 	headerJSON, err := json.Marshal(header)
 	if err != nil {
-		return jwtToken, pkg.ErrJWTHeaderMarshal
+		return jwtToken, jwtUtils.ErrJWTHeaderMarshal
 	}
 
 	headerBase64 := base64.RawURLEncoding.EncodeToString(headerJSON)
 
 	user, err := gorm.G[models.User](db).Where("username = ?", username).First(ctx)
 	if err != nil {
-		return jwtToken, pkg.ErrUserNotFound
+		return jwtToken, jwtUtils.ErrUserNotFound
 	}
 
 	payload := jwtPayload{
@@ -276,7 +275,7 @@ func createJWTWithCustomExpiry(ctx context.Context, username string, expireTime 
 
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
-		return jwtToken, pkg.ErrJWTPayloadMarshal
+		return jwtToken, jwtUtils.ErrJWTPayloadMarshal
 	}
 
 	payloadBase64 := base64.RawURLEncoding.EncodeToString(payloadJSON)
@@ -287,7 +286,7 @@ func createJWTWithCustomExpiry(ctx context.Context, username string, expireTime 
 	}
 
 	fullJWT := headerBase64 + "." + payloadBase64 + "." + signatureBase64
-	jwtToken.Token = fullJWT
+	jwtToken = fullJWT
 
 	return jwtToken, nil
 }
@@ -302,14 +301,14 @@ func createSignature(header string, payload string) (string, error) {
 	privateKeyPEM := []byte(strings.ReplaceAll(os.Getenv("RS256_PRIVATE_KEY"), `\n`, "\n"))
 	privateKey, err := golangjwt.ParseRSAPrivateKeyFromPEM(privateKeyPEM)
 	if err != nil {
-		return "", pkg.ErrInvalidPrivateKey
+		return "", jwtUtils.ErrInvalidPrivateKey
 	}
 
 	dataToSign := header + "." + payload
 
 	signature, err := signingMethod.Sign(dataToSign, privateKey)
 	if err != nil {
-		return "", pkg.ErrJWTSigning
+		return "", jwtUtils.ErrJWTSigning
 	}
 
 	signatureBase64 := base64.RawURLEncoding.EncodeToString(signature)

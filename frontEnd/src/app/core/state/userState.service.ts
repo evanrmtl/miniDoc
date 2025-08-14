@@ -3,6 +3,7 @@ import { WebSocketService } from "../services/websocket/websocket.service";
 import { AuthEventBus } from "../events/authEvent/authEvent.service";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
 import { TokenService } from "../services/token/token.service";
+import { ModalState } from "./modalState.service";
 
 interface State {
     username: string | null;
@@ -26,6 +27,7 @@ export class UserState {
 
     readonly tokenService: TokenService = inject(TokenService);
     readonly websocketService: WebSocketService = inject(WebSocketService);
+    readonly modalState: ModalState = inject(ModalState)
 
     readonly eventBus: AuthEventBus = inject(AuthEventBus);
     
@@ -34,6 +36,7 @@ export class UserState {
 
 
     constructor(){
+        this.initializeEventHandling();
         try {
             const token = this.tokenService.getToken();
             if (token) {
@@ -43,7 +46,6 @@ export class UserState {
         } catch (error) {
             this.removeToken();
         }
-        
     }
 
     setUsername(username: string){
@@ -88,9 +90,9 @@ export class UserState {
             username: username,
             hasJWT: hasJWT
         }))
+        this.setLoggedIn(true);
         if (hasJWT){
             this.websocketService.connect();
-            this.initializeEventHandling();
         }
     }
 
@@ -100,13 +102,12 @@ export class UserState {
             username: null,
             hasJWT: false
         }))
+        this.setLoggedIn(false);
     }
 
     logout(): void {
         this.removeToken();
-        this.setHasJWT(false);
         this._isLoggedIn.next(false);
-        console.log('logout()')
         this.websocketService.disconnect();
     }
 
@@ -136,6 +137,9 @@ export class UserState {
                     break;
                 case 'AUTHENTICATION_REQUEST':
                     this.setAuthenticated(event.data.username, event.data.hasJWT)
+                    break;
+                case 'IS_LOGINED_IN':
+                    this.setLoggedIn(true);
                     break;
             }
         })
