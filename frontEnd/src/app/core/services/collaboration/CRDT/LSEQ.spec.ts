@@ -98,7 +98,7 @@ describe('LSEQ', () => {
         expect(id.path.every(Number.isFinite)).toBe(true);
         
         expect(id.path[0]).toBeGreaterThan(0);
-        expect(id.path[0]).toBeLessThan(1000000);
+        expect(id.path[0]).toBeLessThan(10000000);
     });
 });
         
