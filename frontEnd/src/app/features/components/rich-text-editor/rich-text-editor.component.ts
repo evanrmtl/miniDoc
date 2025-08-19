@@ -1,4 +1,4 @@
-import { Component, createEnvironmentInjector, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RopeTree } from '../../../core/services/collaboration/RopeTree/RopeTree.service';
 import { LSEQ } from '../../../core/services/collaboration/CRDT/LSEQ.service';
 import { ActivatedRoute } from '@angular/router';

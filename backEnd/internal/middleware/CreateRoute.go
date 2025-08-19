@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/evanrmtl/miniDoc/internal/middleware/subroute"
@@ -16,8 +15,6 @@ func CreateRoutes(db *gorm.DB, ctx context.Context) *gin.Engine {
 	router := gin.Default()
 
 	router.Use(func(c *gin.Context) {
-		log.Printf("🔍 Requête: %s %s", c.Request.Method, c.Request.URL.Path)
-		log.Printf("🔍 Origin: %s", c.GetHeader("Origin"))
 		c.Next()
 	})
 

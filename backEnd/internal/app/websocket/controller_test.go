@@ -20,7 +20,6 @@ import (
 
 	"github.com/evanrmtl/miniDoc/internal/app/models"
 	websocket "github.com/evanrmtl/miniDoc/internal/app/websocket"
-	routes "github.com/evanrmtl/miniDoc/internal/middleware"
 	"github.com/evanrmtl/miniDoc/internal/middleware/subroute"
 	"github.com/evanrmtl/miniDoc/internal/pkg/jwtUtils"
 	"github.com/evanrmtl/miniDoc/internal/pkg/redisUtils"
@@ -45,17 +44,15 @@ var ts *httptest.Server
 
 func TestMain(m *testing.M) {
 
-	ctx := context.Background()
-
 	err := testenv.Setup()
 	if err != nil {
 		panic(err)
 	}
 
-	redisUtils.CreateRedis(ctx)
+	redisUtils.CreateRedis(context.Background())
 	setupTestRS256KeyPair()
 
-	ts = httptest.NewServer(createTestRoute(ctx))
+	ts = httptest.NewServer(createTestRoute())
 
 	code := m.Run()
 
@@ -63,36 +60,33 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func createTestRoute(ctx context.Context) *gin.Engine {
+func createTestRoute() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	rg := r.Group("/test")
-	subroute.CreateWSRoute(rg, testenv.DB, ctx)
+
+	subroute.CreateWSRoute(r.Group("/"), testenv.DB, context.Background())
 	return r
 }
 
 func TestWebSocketAuth(t *testing.T) {
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	testenv.CleanTables()
 
 	db := testenv.DB
 
-	router := routes.CreateRoutes(db, ctx)
+	header := http.Header{}
+	header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
+
+	router := createTestRoute()
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	header := http.Header{}
-	header.Add("Origin", "http://localhost")
-
-	header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-
-	url := "ws" + strings.TrimPrefix(ts.URL, "http") + "/v1/ws"
+	url := "ws" + strings.TrimPrefix(ts.URL, "http") + "/ws"
 
 	ws, _, err := gorillaws.DefaultDialer.Dial(url, header)
 	require.NoError(t, err)
 	defer ws.Close()
+
+	fmt.Print("websocket test")
 
 	// CASE Empty db
 	authMsg := `{"type":"auth","data":{"Token":"token_test","Username":"user","SessionID":"123456-123456-123456"}}`
@@ -108,7 +102,7 @@ func TestWebSocketAuth(t *testing.T) {
 
 	// CASE User exist but no session linked to him
 	insertOneUser()
-	authMsg = `{"type":"auth","data":{"Token": "token_test","Username":"test","SessionID":"123456-123456-123456"}}`
+	authMsg = `{"type":"auth","data":{"Token": "test_token","Username":"test","SessionID":"123456-123456-123456"}}`
 
 	err = ws.WriteMessage(gorillaws.TextMessage, []byte(authMsg))
 	require.NoError(t, err)
@@ -240,8 +234,8 @@ func setupTestRS256KeyPair() {
 	os.Setenv("RS256_PUBLIC_KEY", publicKeyBuf.String())
 }
 
-func createJWTWithCustomExpiry(ctx context.Context, username string, expireTime int64, db *gorm.DB) (string, error) {
-	var jwtToken string
+func createJWTWithCustomExpiry(ctx context.Context, username string, expireTime int64, db *gorm.DB) (jwtUtils.JWTToken, error) {
+	var jwtToken jwtUtils.JWTToken
 
 	type jwtHeader struct {
 		Alg string `json:"alg"`
@@ -293,7 +287,6 @@ func createJWTWithCustomExpiry(ctx context.Context, username string, expireTime 
 
 	fullJWT := headerBase64 + "." + payloadBase64 + "." + signatureBase64
 	jwtToken = fullJWT
-	fmt.Println(jwtToken)
 
 	return jwtToken, nil
 }

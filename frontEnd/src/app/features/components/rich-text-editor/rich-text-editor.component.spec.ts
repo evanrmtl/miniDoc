@@ -2,6 +2,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RichTextEditorComponent } from './rich-text-editor.component';
 import { isValidIdPath } from './rich-text-editor.component';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 
 describe('RichTextEditorComponent', () => {
     let component: RichTextEditorComponent;
@@ -9,7 +11,15 @@ describe('RichTextEditorComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            imports: [RichTextEditorComponent] 
+            imports: [RichTextEditorComponent],
+            providers: [
+            {
+                provide: ActivatedRoute,
+                useValue: {
+                    snapshot: { paramMap: { get: (key: string) => 'some-uuid' } }
+                },
+            },
+            ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(RichTextEditorComponent);
