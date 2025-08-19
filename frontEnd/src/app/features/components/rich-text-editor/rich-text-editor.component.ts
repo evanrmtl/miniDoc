@@ -1,6 +1,7 @@
 import { Component, createEnvironmentInjector, OnInit } from '@angular/core';
 import { RopeTree } from '../../../core/services/collaboration/RopeTree/RopeTree.service';
 import { LSEQ } from '../../../core/services/collaboration/CRDT/LSEQ.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-rich-text-editor',
@@ -11,13 +12,14 @@ export class RichTextEditorComponent implements OnInit {
   public lseq : LSEQ;
   public ropeTree : RopeTree;
 
-  constructor(){
+  constructor(private route: ActivatedRoute){
     this.lseq = new LSEQ();
     this.ropeTree = new RopeTree();
   }
 
   ngOnInit(): void {
-    // Initialize the rich text editor
+    const uuid = this.route.snapshot.paramMap.get('uuid');
+    console.log(uuid);
   }
 
   insertCharAtPosition(position: number, char: string) {

@@ -1,48 +1,33 @@
 <div class="home-container">
+  <header class="site-header">
+    <div class="header-content">
+      <div class="brand">
+        <h1 class="logo">miniDoc</h1>
+      </div>
       @if (userState.isLoggedIn()) {
-        <header class="welcome-header">
-          <h1>Bienvenue, {{ userState.username() }}!</h1>
-          <p>Vous êtes connecté à votre espace personnel.</p>
-        </header>
-
-        <main class="main-content">
-          <div class="dashboard">
-            <h2>Tableau de bord</h2>
-            <div class="cards-grid">
-              <div class="card">
-                <h3>Documents</h3>
-                <p>Gérez vos documents</p>
-              </div>
-              <div class="card">
-                <h3>Profil</h3>
-                <p>Modifiez vos informations</p>
-              </div>
-              <div class="card">
-                <h3>Paramètres</h3>
-                <p>Configurez votre compte</p>
-              </div>
-            </div>
-          </div>
-        </main>
-      } @else {
-        <main class="main-content">
-            <div class="dashboard">
-              <h2>Tableau de bord</h2>
-              <div class="cards-grid">
-                <div class="card">
-                  <h3>Documents</h3>
-                  <p>Gérez vos documents</p>
-                </div>
-                <div class="card">
-                  <h3>Profil</h3>
-                  <p>Modifiez vos informations</p>
-                </div>
-                <div class="card">
-                  <h3>Paramètres</h3>
-                  <p>Configurez votre compte</p>
-                </div>
-              </div>
-            </div>
-          </main>
+        <div class="user-section">
+          <span class="username">{{ userState.username() }}</span>
+          <button class="edit-profile-btn" type="button">Éditer profil</button>
+        </div>
       }
     </div>
+  </header>
+
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="create-section">
+        <button class="create-file-btn" type="button" (click)="createFile()">
+          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Créer un fichier
+        </button>
+      </div>
+
+      <!-- Liste des documents -->
+      @if (userState.isLoggedIn()) {
+        test
+      }
+    </div>
+  </main>
+</div>

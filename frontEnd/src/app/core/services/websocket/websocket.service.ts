@@ -41,7 +41,7 @@ export class WebSocketService {
         }
 
         this.websocketState.setError(null);
-        this.socket = new WebSocket('ws://localhost:3000/ws');
+        this.socket = new WebSocket('ws://localhost:3000/v1/ws');
 
         this.updateFromSocket();
 
@@ -81,7 +81,6 @@ export class WebSocketService {
 
     private onMessage = (message: MessageEvent) => {
         console.log("message arrive");
-        console.log(message)
         this.listenMessage(message);
     };
 
@@ -140,7 +139,6 @@ export class WebSocketService {
                 this.websocketState.setIsOpen(true);
                 break;
             case this.socket.CONNECTING:
-                this.websocketState.setIsReconnecting(false);
                 this.websocketState.setStatus('connecting')
                 this.websocketState.setIsOpen(false);
                 break;

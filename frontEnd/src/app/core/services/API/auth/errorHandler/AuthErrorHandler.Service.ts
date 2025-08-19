@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { NotificationService } from '../../notification/notification.service';
-import { UserState } from '../../../state/userState.service'
+import { NotificationService } from '../../../notification/notification.service';
+import { UserState } from '../../../../state/userState.service'
 
 export interface AppError {
     message: string;
