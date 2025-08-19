@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -66,7 +65,7 @@ var sConnectionPool = &SafeConnectionPool{
 	pool: make(map[string]*websocket.Conn),
 }
 
-func WebSocketHandler(c *gin.Context, db *gorm.DB) {
+func WebSocketHandler(c *gin.Context, db *gorm.DB, ctx context.Context) {
 
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -85,10 +84,8 @@ func WebSocketHandler(c *gin.Context, db *gorm.DB) {
 		socket: Socket{conn: conn, ctx: c},
 		client: ClientData{},
 	}
-	log.Println("🟢 WebSocket handler ouvert")
 
 	defer func() {
-		log.Println("🔴 WebSocket handler terminé, fermeture connexion")
 		conn.Close()
 	}()
 
@@ -101,19 +98,19 @@ func WebSocketHandler(c *gin.Context, db *gorm.DB) {
 		writeTimeout: time.Second * 10,
 	}
 
-	manager.Start(db)
+	manager.Start(db, ctx)
 }
 
-func (manager *ConnectionManager) Start(db *gorm.DB) {
-	manager.ctx, manager.cancel = context.WithCancel(context.Background())
+func (manager *ConnectionManager) Start(db *gorm.DB, srvContext context.Context) {
+	manager.ctx, manager.cancel = context.WithCancel(srvContext)
 
 	go manager.writePump()
 	go manager.readPump(db)
 
 	<-manager.ctx.Done()
-	log.Println("pool avant localDelete:", manager.connections.pool)
+
 	manager.deleteLocal()
 	Cleanupctx := context.Background()
+
 	manager.clientSocket.deleteSessionInRedis(Cleanupctx)
-	log.Println("pool apres localDelete:", manager.connections.pool)
 }

@@ -28,7 +28,7 @@ func main() {
 
 	go sessionsUtils.DeleteExpiredSession(ctx, db)
 
-	srv := &http.Server{Addr: ":3000", Handler: routes.CreateRoutes(db)}
+	srv := &http.Server{Addr: ":3000", Handler: routes.CreateRoutes(db, ctx)}
 
 	redisUtils.CreateRedis(ctx)
 

@@ -1,6 +1,8 @@
 package websocket
 
-import "github.com/gorilla/websocket"
+import (
+	"github.com/gorilla/websocket"
+)
 
 func (cs *ClientSocket) storeLocalConnection(sessionID string) {
 	sConnectionPool.Add(sessionID, cs.socket.conn)

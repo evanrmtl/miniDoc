@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateAuthRoutes(router *gin.Engine, db *gorm.DB) {
+func CreateAuthRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	router.POST("/register", func(c *gin.Context) {
 		auth.RegisterController(c, db)
 	})

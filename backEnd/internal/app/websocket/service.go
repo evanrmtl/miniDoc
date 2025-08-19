@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -109,7 +110,7 @@ func (cs *ClientSocket) handleTextMessage(msg []byte, db *gorm.DB, sendChan chan
 func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan chan []byte) {
 
 	var authMessage struct {
-		ClientData ClientData `json:"data"`
+		Data ClientData `json:"data"`
 	}
 
 	err := json.Unmarshal(msg, &authMessage)
@@ -121,24 +122,26 @@ func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan c
 	ctx := cs.socket.ctx.Request.Context()
 	agent := cs.socket.ctx.Request.UserAgent()
 
-	err = jwtUtils.ValidJWT(authMessage.ClientData.Token, agent, ctx, db)
+	err = jwtUtils.ValidJWT(authMessage.Data.Token, agent, ctx, db)
 
 	if err != nil && !errors.Is(err, jwtUtils.ErrJWTExpired) {
+		fmt.Println(err)
+		fmt.Println(authMessage.Data.Token)
 		cs.sendResponse(sendChan, MessageTypeAuthFailed, nil)
 		return
 	}
 
-	sessionsUtils.CreateSession(authMessage.ClientData.UserID, agent, ctx, db)
+	sessionsUtils.CreateSession(authMessage.Data.UserID, agent, ctx, db)
 
 	cs.client = ClientData{
-		Token:     authMessage.ClientData.Token,
-		Username:  authMessage.ClientData.Username,
-		UserID:    authMessage.ClientData.UserID,
-		SessionID: authMessage.ClientData.SessionID,
+		Token:     authMessage.Data.Token,
+		Username:  authMessage.Data.Username,
+		UserID:    authMessage.Data.UserID,
+		SessionID: authMessage.Data.SessionID,
 	}
 
 	if errors.Is(err, jwtUtils.ErrJWTExpired) {
-		newToken, err := jwtUtils.CreateJWT(ctx, authMessage.ClientData.Username, db)
+		newToken, err := jwtUtils.CreateJWT(ctx, authMessage.Data.Username, db)
 		if err != nil {
 			cs.sendResponse(sendChan, MessageTypeAuthFailed, nil)
 			return
@@ -152,7 +155,7 @@ func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan c
 		cs.sendResponse(sendChan, MessageTypeAuthSuccess, data)
 
 		cs.storeSessionInRedis(ctx)
-		cs.storeLocalConnection(authMessage.ClientData.SessionID)
+		cs.storeLocalConnection(authMessage.Data.SessionID)
 		return
 	}
 
@@ -162,7 +165,7 @@ func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan c
 
 	cs.sendResponse(sendChan, MessageTypeAuthSuccess, data)
 	cs.storeSessionInRedis(ctx)
-	cs.storeLocalConnection(authMessage.ClientData.SessionID)
+	cs.storeLocalConnection(authMessage.Data.SessionID)
 }
 
 func (cs *ClientSocket) sendResponse(sendChan chan []byte, msgType string, data interface{}) {
