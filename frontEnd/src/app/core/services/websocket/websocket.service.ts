@@ -52,14 +52,12 @@ export class WebSocketService {
     }
 
     private onOpen = (event: Event) => {
-        console.log("server connecté");
         this.sendAuth();
         this.updateFromSocket();
         this.hasShownDisconnectNotif = false;
     };
 
     private onClose = async (event: CloseEvent) => {
-        console.log("WebSocket fermé");
         this.updateFromSocket();
         if (!event.wasClean) {
             if (!this.hasShownDisconnectNotif) {
@@ -80,7 +78,6 @@ export class WebSocketService {
     };
 
     private onMessage = (message: MessageEvent) => {
-        console.log("message arrive");
         this.listenMessage(message);
     };
 
@@ -113,6 +110,7 @@ export class WebSocketService {
                 if (message.data.renewed === true){
                     this.replaceJWT(message.data.token);
                 }
+                this.notification.show('Connected !', 'success');
                 break;
             case 'Auth_failed':
                 this.disconnect()
@@ -129,24 +127,24 @@ export class WebSocketService {
     }
 
     private updateFromSocket(){
-        if(!this.socket.readyState){
+        if(this.socket.readyState === undefined || this.socket.readyState === null){
             return;
         }
         switch(this.socket.readyState){
-            case this.socket.OPEN:
+           case WebSocket.OPEN:
                 this.websocketState.setIsReconnecting(false);
                 this.websocketState.setStatus('open');
                 this.websocketState.setIsOpen(true);
                 break;
-            case this.socket.CONNECTING:
+            case WebSocket.CONNECTING:
                 this.websocketState.setStatus('connecting')
                 this.websocketState.setIsOpen(false);
                 break;
-            case this.socket.CLOSING:
+            case WebSocket.CLOSING:
                 this.websocketState.setStatus('closing');
                 this.websocketState.setIsOpen(false);
                 break;
-            case this.socket.CLOSED:
+            case WebSocket.CLOSED:
                 this.websocketState.setStatus('closed');
                 this.websocketState.setIsOpen(false);
                 break;
@@ -169,7 +167,6 @@ export class WebSocketService {
         this.websocketState.setIsReconnecting(true)
         return new Promise<boolean>((resolve) => {
             const tryAgain = () => {
-                console.log("attempts nb :" + attempts)
                 if (this.socket.readyState === this.socket.OPEN) {
                     resolve(true);
                     return;

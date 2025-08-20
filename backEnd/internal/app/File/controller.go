@@ -60,8 +60,6 @@ func CreateFileController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	log.Println("doc creer")
-
 	currFile, err := gorm.G[models.File](db).Where("file_uuid = ?", uuid).First(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Couldn't create file"})
@@ -143,10 +141,11 @@ func DeleteFileController(c *gin.Context, db *gorm.DB) {
 
 	_, err = gorm.G[models.File](db).Where("file_uuid = ?", file_uuid).Delete(ctx)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	c.JSON(http.StatusInternalServerError, gin.H{"success": "File deleted"})
+	c.JSON(http.StatusOK, gin.H{"success": "File deleted"})
 }
 
 func GetFileController(c *gin.Context, db *gorm.DB) {
@@ -184,12 +183,22 @@ func GetFileController(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	files, err := gorm.G[models.UsersFile](db).Where("UserID = ?", userID).Find(ctx)
+	userfiles, err := gorm.G[models.UsersFile](db).Where("user_id = ?", userID).Find(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error while finding usersfiles"})
+		return
+	}
+
+	fileUUIDs := make([]string, len(userfiles))
+
+	for i, userfile := range userfiles {
+		fileUUIDs[i] = userfile.FileUUID
+	}
+
+	files, err := gorm.G[models.File](db).Select("file_uuid", "file_name", "file_updated_at").Where("file_uuid IN ?", fileUUIDs).Order("file_updated_at desc").Find(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error while finding files"})
 		return
 	}
-
 	c.JSON(http.StatusOK, files)
-
 }

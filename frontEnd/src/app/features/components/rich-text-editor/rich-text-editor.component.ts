@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RopeTree } from '../../../core/services/collaboration/RopeTree/RopeTree.service';
 import { LSEQ } from '../../../core/services/collaboration/CRDT/LSEQ.service';
 import { ActivatedRoute } from '@angular/router';
+import { WebSocketState } from '../../../core/state/websocketState.service';
+import { WebSocketService } from '../../../core/services/websocket/websocket.service';
+import { NavigateService } from '../../../core/navigation/navigation.service';
 
 @Component({
   selector: 'app-rich-text-editor',
@@ -11,6 +14,11 @@ import { ActivatedRoute } from '@angular/router';
 export class RichTextEditorComponent implements OnInit {
   public lseq : LSEQ;
   public ropeTree : RopeTree;
+  
+
+  readonly websocketState: WebSocketState = inject(WebSocketState)
+  readonly websocketService: WebSocketService = inject(WebSocketService)
+  readonly navigator: NavigateService = inject(NavigateService)
 
   constructor(private route: ActivatedRoute){
     this.lseq = new LSEQ();
@@ -19,7 +27,6 @@ export class RichTextEditorComponent implements OnInit {
 
   ngOnInit(): void {
     const uuid = this.route.snapshot.paramMap.get('uuid');
-    console.log(uuid);
   }
 
   insertCharAtPosition(position: number, char: string) {

@@ -30,6 +30,7 @@ export const routes: Routes = [
     },
     { 
         path : 'file/:uuid',
-        component: RichTextEditorComponent
+        component: RichTextEditorComponent,
+        canActivate: [AuthGuard]
     },
 ];
