@@ -268,7 +268,6 @@ describe('RopeTree', () => {
             const internalNode = new InternalNode(leftLeaf, rightLeaf);
             
             const lastId = (ropeTree as any).getLastIdInSubtree(internalNode);
-            console.log("Last ID in subtree:", lastId);
 
             expect(lastId).toBeTruthy();
             expect(lastId.path).toEqual([200]);
