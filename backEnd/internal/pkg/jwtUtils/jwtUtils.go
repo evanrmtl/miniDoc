@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
 	"strings"
 
@@ -144,7 +143,7 @@ func ValidJWT(token string, agent string, ctx context.Context, db *gorm.DB) erro
 	if err != nil {
 		return ErrPayloadDecode
 	}
-	log.Println("here")
+
 	var payload jwtPayload
 	err = json.Unmarshal(decodedPayload, &payload)
 	if err != nil {
