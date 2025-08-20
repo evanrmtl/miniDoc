@@ -1,61 +1,33 @@
-// Variables de couleurs basées sur votre palette
-$color-primary: #FAFAFA; // blanc cassé (60%)
-$color-secondary: #DAD0FF; // lavande pastel (30%)
-$color-accent: #6F42C1; // violet moyen (10%)
-$color-text-primary: #212529; // quasi-noir
-$color-text-secondary: #495057; // gris foncé
-$color-error: #DC3545; // rouge pour erreurs
-
-// Variables supplémentaires
+// Palette simplifiée et stricte
+$color-dominant: #FAFAFA;         // 60%
+$color-secondary: #DAD0FF;        // 30%
+$color-accent: #6F42C1;           // 10%
+$color-text: #212529;
+$color-text-secondary: #495057;
+$color-error: #DC3545;
 $color-white: #FFFFFF;
-$color-glass-bg: rgba(255, 255, 255, 0.20);
 $border-radius: 12px;
 $border-radius-sm: 8px;
 $shadow-light: 0 2px 8px rgba(111, 66, 193, 0.08);
 $shadow-medium: 0 4px 16px rgba(111, 66, 193, 0.12);
-$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
 
-// Mixins
-@mixin glassmorphism {
-  background: $color-glass-bg;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-@mixin button-base {
-  border: none;
-  border-radius: $border-radius-sm;
-  font-weight: 500;
-  cursor: pointer;
-  transition: $transition;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: inherit;
-  
-  &:focus {
-    outline: 2px solid $color-accent;
-    outline-offset: 2px;
-  }
-}
-
-// Styles principaux
 .home-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, $color-primary 0%, $color-secondary 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: $color-text-primary;
+  background: $color-dominant;
+  font-family: 'Open Sans', sans-serif;
+  color: $color-text;
 }
 
 .site-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  @include glassmorphism;
+  background: rgba(255,255,255,0.9);
+  border-bottom: 1px solid $color-secondary;
   
   .header-content {
-    max-width: 1200px;
+    max-width: 1700px;
     margin: 0 auto;
     padding: 1rem 2rem;
     display: flex;
@@ -63,14 +35,12 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     justify-content: space-between;
   }
   
-  .brand {
-    .logo {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: $color-accent;
-      margin: 0;
-      letter-spacing: -0.025em;
-    }
+  .brand .logo {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $color-accent;
+    letter-spacing: -0.025em;
+    margin: 0;
   }
   
   .user-section {
@@ -79,25 +49,29 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     gap: 1rem;
     
     .username {
-      font-weight: 500;
       color: $color-text-secondary;
+      font-weight: 500;
     }
     
     .edit-profile-btn {
-      @include button-base;
-      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: $border-radius-sm;
       background: $color-accent;
       color: $color-white;
+      font-weight: 500;
       font-size: 0.875rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: $transition;
       
       &:hover {
-        background: darken($color-accent, 8%);
-        transform: translateY(-1px);
+        background: darken($color-accent,8%);
         box-shadow: $shadow-medium;
       }
       
-      &:active {
-        transform: translateY(0);
+      &:focus {
+        outline: 2px solid $color-accent;
+        outline-offset: 2px;
       }
     }
   }
@@ -107,211 +81,314 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 2rem 0;
   
   .content-wrapper {
-    max-width: 1200px;
+    max-width: 1700px;
     margin: 0 auto;
     padding: 0 2rem;
   }
-}
 
-.create-section {
-  text-align: center;
-  margin-bottom: 3rem;
-  
-  .create-file-btn {
-    @include button-base;
-    padding: 1rem 2rem;
-    background: $color-accent;
-    color: $color-white;
-    font-size: 1.125rem;
-    font-weight: 600;
-    border-radius: $border-radius;
-    box-shadow: $shadow-light;
+
+  .search-section {
+    margin-top: 3em;
+    margin-bottom: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    width: 100%;
     
-    .icon {
-      width: 20px;
-      height: 20px;
-    }
-    
-    &:hover {
-      background: darken($color-accent, 8%);
-      transform: translateY(-2px);
-      box-shadow: $shadow-medium;
-    }
-    
-    &:active {
-      transform: translateY(-1px);
+    .search-bar {
+      position: relative;
+      max-width: 500px;
+      width: 100%;
+      margin: 0 auto;
+      
+      .search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: $color-text-secondary;
+        pointer-events: none;
+      }
+      
+      .search-input {
+        width: 100%;
+        padding: 12px 16px 12px 48px;
+        border: 1px solid $color-secondary;
+        border-radius: $border-radius;
+        background: $color-white;
+        font-size: 16px;
+        font-family: inherit;
+        color: $color-text;
+        transition: $transition;
+        
+        &::placeholder {
+          color: $color-text-secondary;
+        }
+        
+        &:focus {
+          outline: none;
+          border-color: $color-accent;
+          box-shadow: $shadow-light;
+        }
+        
+        &:hover {
+          border-color: darken($color-secondary, 10%);
+        }
+      }
     }
   }
-}
 
-.documents-section {
-  .section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: $color-text-primary;
-    margin-bottom: 1.5rem;
+  .create-section {
+    text-align: center;
+    margin-bottom: 3rem;
+    
+    .create-file-btn {
+      border: none;
+      border-radius: $border-radius;
+      background: $color-accent;
+      color: $color-white;
+      font-size: 1.125rem;
+      font-weight: 600;
+      padding: 1rem 2rem;
+      box-shadow: $shadow-light;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: $transition;
+      
+      .icon {
+        width: 20px;
+        height: 20px;
+      }
+      
+      &:hover {
+        background: darken($color-accent,9%);
+        box-shadow: $shadow-medium;
+      }
+      
+      &:focus {
+        outline: 2px solid $color-accent;
+        outline-offset: 2px;
+      }
+    }
   }
-  
-  .documents-grid {
+
+  .user-files-container {
+    padding: 24px 0;
+    
+    .files-header {
+      color: $color-text;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 32px;
+      letter-spacing: -0.02em;
+    }
+  }
+
+  .files-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
+    gap: 20px;
+    margin-bottom: 32px;
   }
-  
-  .document-card {
-    @include glassmorphism;
-    padding: 1.5rem;
+
+  .file-card {
+    background: $color-white;
+    border: 1px solid $color-secondary;
     border-radius: $border-radius;
+    padding: 20px;
     box-shadow: $shadow-light;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     transition: $transition;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     
     &:hover {
-      transform: translateY(-2px);
+      border-color: $color-accent;
       box-shadow: $shadow-medium;
+      transform: translateY(-2px);
     }
     
-    .card-content {
-      flex: 1;
+    .file-icon {
+      color: $color-accent;
       
-      .document-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: $color-text-primary;
-        margin: 0 0 0.5rem 0;
+      svg {
+        width: 32px;
+        height: 32px;
+      }
+    }
+    
+    .file-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      
+      .file-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: $color-text;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         line-height: 1.4;
       }
       
-      .last-modified {
-        font-size: 0.875rem;
-        color: $color-text-secondary;
-        margin: 0;
+      .file-meta-section {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        
+        .file-meta-label {
+          font-size: 13px;
+          font-weight: 500;
+          color: $color-text-secondary;
+          margin: 0;
+          opacity: 0.8;
+        }
+        
+        .file-meta-value {
+          font-size: 14px;
+          font-weight: 400;
+          color: $color-text;
+          margin: 0;
+        }
       }
     }
     
-    .card-actions {
+    .file-actions {
+      display: flex;
+      gap: 8px;
+      
       .action-btn {
-        @include button-base;
-        padding: 0.5rem;
-        background: transparent;
-        color: $color-text-secondary;
-        border: 1px solid rgba(111, 66, 193, 0.2);
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: $border-radius-sm;
+        background: $color-secondary;
+        color: $color-accent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: $transition;
+        cursor: pointer;
         
         &:hover {
           background: $color-accent;
           color: $color-white;
-          border-color: $color-accent;
+        }
+        
+        &.delete-btn:hover {
+          background: $color-error;
+          color: $color-white;
         }
       }
     }
   }
-}
-
-// Version unifiée et corrigée de .empty-state
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
   
-  .empty-content {
-    max-width: 400px;
-    margin: 0 auto;
-    
-    .empty-icon {
-      color: $color-text-secondary;
-      opacity: 0.6;
-      margin-bottom: 1.5rem;
-    }
-    
-    h3 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: $color-text-primary;
-      margin: 0 0 0.5rem 0;
-    }
+  .no-files {
+    text-align: center;
+    padding: 3rem 2rem;
+    margin: 2rem auto;
+    max-width: 470px;
     
     p {
-      color: $color-text-secondary;
-      margin: 0 0 1.5rem 0;
-      line-height: 1.5;
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+      line-height: 1.6;
     }
     
-    // Bouton de connexion
-    .login-btn {
-      @include button-base;
-      padding: 0.875rem 1.5rem;
-      background: $color-accent;
-      color: $color-white;
-      font-size: 1rem;
-      font-weight: 500;
-      border-radius: $border-radius;
-      box-shadow: $shadow-light;
+    .wrong-query {
+      color: $color-error;
+      font-weight: 600;
       
-      &:hover {
-        background: darken($color-accent, 8%);
-        transform: translateY(-1px);
-        box-shadow: $shadow-medium;
+      &::before {
+        content: "🔍";
+        margin-right: 0.5rem;
       }
+    }
+    
+    .new-user {
+      color: $color-text-secondary;
+      font-weight: 400;
+      font-style: italic;
       
-      &:active {
-        transform: translateY(0);
+      &::before {
+        content: "✨";
+        margin-right: 0.5rem;
       }
     }
   }
 }
 
-// Responsive design
+// Responsive
 @media (max-width: 768px) {
-  .site-header {
-    .header-content {
-      padding: 1rem;
-    }
+  .site-header .header-content { 
+    padding: 1rem; 
+  }
+  
+  .user-section .username { 
+    display: none; 
+  }
+  
+  .main-content .content-wrapper { 
+    padding: 0 1rem; 
+  }
+
+  .file-card {
+    text-align: center;
+    align-items: center;
+  }
+  
+  .files-grid { 
+    grid-template-columns: 1fr; 
+    gap: 1rem; 
+  }
+  
+  .create-section .create-file-btn { 
+    font-size: 1rem; 
+    padding: 0.875rem 1.5rem; 
+  }
+
+  .no-files {
+    padding: 2rem 1rem;
     
-    .user-section {
-      gap: 0.5rem;
-      
-      .username {
-        display: none; // Cache le nom d'utilisateur sur mobile
-      }
-    }
-  }
-  
-  .main-content {
-    .content-wrapper {
-      padding: 0 1rem;
-    }
-  }
-  
-  .documents-section {
-    .documents-grid {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-  }
-  
-  .create-section {
-    .create-file-btn {
+    p {
       font-size: 1rem;
-      padding: 0.875rem 1.5rem;
     }
   }
+
 }
 
 @media (max-width: 480px) {
-  .documents-section {
-    .document-card {
-      .card-content {
-        .document-title {
-          font-size: 1rem;
-        }
-      }
+
+  .file-card {
+    text-align: center;
+    align-items: center;
+  }
+
+  .file-actions {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    
+    .action-btn {
+      flex: 1;
+      margin: 0 0.25rem;
+      max-width: none;
+      width: auto;
     }
   }
+
+
+  .file-card .file-info .file-name { 
+    font-size: 1rem;
+  }
   
-  .site-header {
-    .brand .logo {
-      font-size: 1.5rem;
-    }
+  .site-header .brand .logo { 
+    font-size: 1.5rem; 
   }
 }
