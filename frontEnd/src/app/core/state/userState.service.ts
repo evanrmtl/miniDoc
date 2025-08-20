@@ -111,6 +111,11 @@ export class UserState {
         this.websocketService.disconnect();
     }
 
+    websocketLogout(): void {
+        this.removeToken();
+        this._isLoggedIn.next(false)
+    }
+
     setToken(token: string){
         this.tokenService.setToken(token);
     }
@@ -140,6 +145,9 @@ export class UserState {
                     break;
                 case 'IS_LOGINED_IN':
                     this.setLoggedIn(true);
+                    break;
+                case 'WEBSOCKET_LOGOUT':
+                    this.websocketLogout();
                     break;
             }
         })

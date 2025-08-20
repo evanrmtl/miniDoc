@@ -157,8 +157,8 @@ export class WebSocketService {
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.websocketState.setStatus('closing');
             this.socket.close();
-            this.eventBus.emit('LOGOUT_REQUEST')
         }
+        this.eventBus.emit('WEBSOCKET_LOGOUT')
     }
 
     autoReconnect(): Promise<boolean> {
