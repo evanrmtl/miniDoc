@@ -49,7 +49,6 @@ export class AuthService {
         if(res.JWT) {
             this.userState.removeToken();
             this.userState.setToken(res.JWT);
-            this.websocket.connect();
         }
     }
 }
