@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -35,9 +36,12 @@ func CreateRedis(ctx context.Context) {
 	password := os.Getenv("REDIS_PASSWORD")
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     host + ":" + port,
-		Password: password,
-		DB:       db,
+		Addr:         host + ":" + port,
+		Password:     password,
+		DB:           db,
+		ReadTimeout:  0,
+		WriteTimeout: 3 * time.Second,
+		DialTimeout:  5 * time.Second,
 	})
 
 	err := redisClient.Set(ctx, "test_connection", "connected", 0).Err()

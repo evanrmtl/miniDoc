@@ -2,10 +2,12 @@ package websocket
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/evanrmtl/miniDoc/internal/pkg/redisUtils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
@@ -56,14 +58,12 @@ type ConnectionManager struct {
 }
 
 type SafeConnectionPool struct {
-	mu   sync.RWMutex
-	pool map[string]*websocket.Conn
+	pool      sync.Map // sessionID -> *Websocket.Conn
+	userIndex sync.Map // userID -> []string
+	managers  sync.Map // sessionID -> *ConnectionManager
 }
 
-var sConnectionPool = &SafeConnectionPool{
-	mu:   sync.RWMutex{},
-	pool: make(map[string]*websocket.Conn),
-}
+var sConnectionPool = &SafeConnectionPool{}
 
 func WebSocketHandler(c *gin.Context, db *gorm.DB, ctx context.Context) {
 
@@ -107,10 +107,11 @@ func (manager *ConnectionManager) Start(db *gorm.DB, srvContext context.Context)
 	go manager.writePump()
 	go manager.readPump(db)
 
+	fmt.Println("🟢 websocket connected")
 	<-manager.ctx.Done()
-
-	manager.deleteLocal()
+	fmt.Println("🔴 websocket disconnected")
 	Cleanupctx := context.Background()
+	redisUtils.DeleteSessionInRedis(manager.clientSocket.client.SessionID, Cleanupctx)
+	manager.DeleteLocal()
 
-	manager.clientSocket.deleteSessionInRedis(Cleanupctx)
 }

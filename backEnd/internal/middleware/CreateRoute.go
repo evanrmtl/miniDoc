@@ -20,7 +20,7 @@ func CreateRoutes(db *gorm.DB, ctx context.Context) *gin.Engine {
 
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"http://localhost:4200"}
-	config.AllowMethods = []string{"POST", "GET", "OPTIONS", "PATCH"}
+	config.AllowMethods = []string{"POST", "GET", "OPTIONS", "PATCH", "DELETE"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 	config.ExposeHeaders = []string{"Content-Length"}
 	config.AllowCredentials = true
@@ -32,6 +32,7 @@ func CreateRoutes(db *gorm.DB, ctx context.Context) *gin.Engine {
 	subroute.CreateAuthRoutes(v1, db)
 	subroute.CreateWSRoute(v1, db, ctx)
 	subroute.CreateFileRoutes(v1, db)
+	subroute.CreateVerifyRoutes(v1, db)
 
 	return router
 }
