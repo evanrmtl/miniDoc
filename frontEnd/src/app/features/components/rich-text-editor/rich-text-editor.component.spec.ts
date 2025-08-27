@@ -4,15 +4,36 @@ import { RichTextEditorComponent } from './rich-text-editor.component';
 import { isValidIdPath } from './rich-text-editor.component';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { WebSocketService } from '../../../core/services/websocket/websocket.service';
 
 describe('RichTextEditorComponent', () => {
     let component: RichTextEditorComponent;
     let fixture: ComponentFixture<RichTextEditorComponent>;
+    let mockWebSocketService: jasmine.SpyObj<WebSocketService>;
+
+    
 
     beforeEach(async () => {
+        const webSocketSpy = jasmine.createSpyObj('WebSocketService', [
+            'connect', 
+            'disconnect', 
+            'sendMessage',
+            'getFileNotifications'
+            ]);
+
+        webSocketSpy.getFileNotifications.and.returnValue(of(null));
+        webSocketSpy.sendMessage.and.returnValue(undefined);
+        webSocketSpy.connect.and.returnValue(undefined);
+        webSocketSpy.disconnect.and.returnValue(undefined);
+
         await TestBed.configureTestingModule({
             imports: [RichTextEditorComponent],
             providers: [
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: WebSocketService, useValue: webSocketSpy },
             {
                 provide: ActivatedRoute,
                 useValue: {
@@ -24,6 +45,7 @@ describe('RichTextEditorComponent', () => {
 
         fixture = TestBed.createComponent(RichTextEditorComponent);
         component = fixture.componentInstance;
+        mockWebSocketService = TestBed.inject(WebSocketService) as jasmine.SpyObj<WebSocketService>;
         fixture.detectChanges();
     });
 
