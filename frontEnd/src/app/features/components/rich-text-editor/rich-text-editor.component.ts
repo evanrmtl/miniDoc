@@ -26,7 +26,13 @@ export class RichTextEditorComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const uuid = this.route.snapshot.paramMap.get('uuid');
+    const file_uuid = this.route.snapshot.paramMap.get('uuid');
+    this.websocketService.sendMessage("joinFile", file_uuid)
+    //TODO fetch fileContent
+  }
+
+  ngOnDestroy(): void {
+    this.websocketService.sendMessage("exitFile")
   }
 
   insertCharAtPosition(position: number, char: string) {

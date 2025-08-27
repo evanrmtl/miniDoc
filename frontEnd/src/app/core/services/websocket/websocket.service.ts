@@ -4,14 +4,37 @@ import { WebSocketErrorHandler } from "./errorHandler/webSocketHandler.service";
 import { AuthEventBus } from "../../events/authEvent/authEvent.service";
 import { Token, TokenService } from "../token/token.service";
 import { NavigateService } from "../../navigation/navigation.service";
-import { range } from "rxjs";
-import { webSocket } from "rxjs/webSocket";
+import { BehaviorSubject, Observable, range } from "rxjs";
 import { NotificationService } from "../notification/notification.service";
+import { not } from "rxjs/internal/util/not";
 
 interface Message{
     type: string;
     data: any;
 }
+
+export interface FileNotification {
+    notificationType: string;
+    targetUser: number;
+    data: SharedFileData | revokeFileData;
+}
+
+export interface SharedUsers{
+    username: string;
+    role: string;
+}
+
+export interface SharedFileData {
+    fileUUID: string;
+    fileName: string;
+    updatedAt: number;
+    sharedUsers: SharedUsers[];
+}
+
+export interface revokeFileData {
+    fileUUID: string;
+}
+
 
 @Injectable({
     providedIn: 'root'
@@ -26,10 +49,12 @@ export class WebSocketService {
     readonly navigator: NavigateService = inject(NavigateService);
     readonly notification: NotificationService = inject(NotificationService)
 
-    private sessionId = crypto.randomUUID();
     private hasShownDisconnectNotif = false;
     private maxAutoReconnect: number = 4;
-    
+
+    private fileNotifications = new BehaviorSubject<FileNotification | null>(null);
+
+    public sessionUUID = crypto.randomUUID();
 
     connect(): void {
 
@@ -55,6 +80,7 @@ export class WebSocketService {
         this.sendAuth();
         this.updateFromSocket();
         this.hasShownDisconnectNotif = false;
+        console.log("connected")
     };
 
     private onClose = async (event: CloseEvent) => {
@@ -91,7 +117,7 @@ export class WebSocketService {
         const token = this.tokenService.getToken();
         const username = this.tokenService.getParsedToken()?.username;
         const userID = this.tokenService.getParsedToken()?.userId;
-        const sessionID = this.sessionId
+        const sessionID = this.sessionUUID
         
         if (token && username) {
             this.socket.send(JSON.stringify({
@@ -115,9 +141,22 @@ export class WebSocketService {
             case 'Auth_failed':
                 this.disconnect()
                 break;
+            case 'notification':
+                console.log(message)
+                this.handleFileNotification(message);
+                break;
             default:
                 break;
         }
+    }
+
+    private handleFileNotification(message: any){
+        const notification: FileNotification = {
+            notificationType: message.data.notificationType,
+            targetUser: message.data.targetUser,
+            data: message.data.fileData
+        };
+        this.fileNotifications.next(notification)
     }
 
 
@@ -181,5 +220,16 @@ export class WebSocketService {
             };
             tryAgain();
         });
+    }
+
+    sendMessage(type: string, data: string | null = null){
+          this.socket.send(JSON.stringify({
+                type: type, 
+                data: data
+            }));
+    }
+
+    getFileNotifications(): Observable<FileNotification | null> {
+        return this.fileNotifications.asObservable();
     }
 }

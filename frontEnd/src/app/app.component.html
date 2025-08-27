@@ -11,3 +11,11 @@
 <div class="modal-overlay">
   <router-outlet name="modal"></router-outlet>
 </div>
+
+@if (sharePopoverData) {
+  <app-share
+    [fileData]="sharePopoverData"
+    (close)="closeSharePopover()"
+  >
+  </app-share>
+}

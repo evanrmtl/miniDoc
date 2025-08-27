@@ -1,0 +1,541 @@
+:host {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: 'Open Sans', sans-serif;
+  padding: 16px; // Ajout padding pour mobile
+}
+
+.popover-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.315);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  cursor: pointer;
+  padding: inherit; // Hérite du padding du host
+}
+
+.popover-content {
+  background: #E6E6FA; 
+  border-radius: 16px;
+  max-width: 520px;
+  width: 100%; // Changé de 90% à 100%
+  max-height: 90vh; // Augmenté de 80vh à 90vh
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: popoverSlideIn 0.3s ease-out;
+  cursor: default;
+
+  // Responsive breakpoints
+  @media (max-width: 768px) {
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+
+  @media (max-width: 480px) {
+    max-height: 100vh;
+    border-radius: 8px;
+  }
+}
+
+@keyframes popoverSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+
+  // Mobile responsive
+  @media (max-width: 480px) {
+    padding: 16px 20px 12px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #4A4A7C;
+    line-height: 1.2;
+    
+    // Titre responsive
+    @media (max-width: 480px) {
+      font-size: 16px;
+      max-width: calc(100% - 40px); // Espace pour le bouton close
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    color: #4A4A7C;
+    transition: all 0.2s ease;
+    flex-shrink: 0; // Empêche le rétrécissement
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: #2d3748;
+    }
+  }
+}
+
+.popover-body {
+  padding: 20px 24px;
+  
+  @media (max-width: 480px) {
+    padding: 16px 20px;
+  }
+}
+
+.add-username {
+  background-color: rgba(255, 255, 255, 0.4);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  @media (max-width: 480px) {
+    padding: 12px;
+    gap: 8px;
+    flex-direction: column; // Stack sur mobile si nécessaire
+    
+    // Ou garder en ligne mais ajuster les tailles
+    &.inline {
+      flex-direction: row;
+    }
+  }
+}
+
+.input-group {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  background: rgba(250, 250, 250, 0.8);
+  font-size: 14px;
+  min-width: 0; // Permet le rétrécissement
+  
+  &:focus {
+    outline: none;
+    border-color: #9B7CB0;
+    box-shadow: 0 0 0 2px rgba(155, 124, 176, 0.2);
+  }
+  
+  &::placeholder {
+    color: #5b5166;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+.action-btn {
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.plus {
+    background-color: #D4F4D4;
+    color: #2D7D32;
+    
+    &:hover:not(:disabled) {
+      background-color: #C8E6C9;
+      transform: scale(1.05);
+    }
+  }
+
+  @media (max-width: 480px) {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.users-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (max-width: 480px) {
+    gap: 16px;
+  }
+}
+
+.users-section {
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  padding: 16px;
+
+  @media (max-width: 480px) {
+    padding: 12px;
+    border-radius: 8px;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 0;
+  color: #4A4A7C;
+  font-size: 14px;
+  font-weight: 600;
+
+  .section-icon {
+    font-size: 16px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+    gap: 6px;
+    
+    .section-icon {
+      font-size: 14px;
+    }
+  }
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+  min-height: 48px; // Hauteur minimum pour touch
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.pending {
+    border-left: 3px solid #FFA726;
+  }
+
+  &.owner {
+    border-left: 3px solid #FFD700;
+    background: rgba(255, 215, 0, 0.1);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 480px) {
+    padding: 8px 12px;
+    border-radius: 8px;
+    min-height: 44px;
+  }
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0; // Permet l'overflow
+
+  .user-avatar {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .username {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4A4A7C;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .user-role {
+    background: rgba(155, 124, 176, 0.2);
+    color: #4A4A7C;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+
+    &.owner-role {
+      background: rgba(255, 215, 0, 0.3);
+      color: #B8860B;
+    }
+  }
+
+  .pending-badge {
+    background: rgba(255, 167, 38, 0.2);
+    color: #E65100;
+  }
+
+  @media (max-width: 480px) {
+    gap: 8px;
+    
+    .user-avatar {
+      font-size: 16px;
+    }
+    
+    .username {
+      font-size: 13px;
+    }
+    
+    .user-role {
+      font-size: 11px;
+      padding: 3px 6px;
+      // Masquer sur très petits écrans si nécessaire
+      @media (max-width: 360px) {
+        display: none;
+      }
+    }
+  }
+}
+
+.btn-remove {
+  background: #FFCDD2;
+  color: #D32F2F;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:hover {
+    background: #FFBCBF;
+    transform: scale(1.05);
+  }
+
+  @media (max-width: 480px) {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.btn-revoke {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:hover {
+    background: linear-gradient(135deg, #FF5252, #FF7979);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  }
+
+  span {
+    line-height: 1;
+  }
+
+  @media (max-width: 480px) {
+    padding: 6px 10px;
+    font-size: 12px;
+    gap: 4px;
+    
+    // Version compacte sur très petits écrans
+    @media (max-width: 360px) {
+      span {
+        display: none; // Masque le texte, garde juste l'icône
+      }
+      padding: 6px;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+    }
+  }
+}
+
+.owner-badge {
+  background: linear-gradient(135deg, #FFD700, #FFA000);
+  color: #B8860B;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+
+  @media (max-width: 480px) {
+    padding: 12px 20px 16px;
+    gap: 8px;
+    
+    // Stack les boutons sur très petits écrans si nécessaire
+    @media (max-width: 360px) {
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+  }
+}
+
+.cancel-btn, .share-btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @media (max-width: 480px) {
+    padding: 10px 16px;
+    font-size: 13px;
+    
+    @media (max-width: 360px) {
+      width: 100%; // Pleine largeur sur très petits écrans
+    }
+  }
+}
+
+.cancel-btn {
+  background: transparent;
+  color: #4A4A7C;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.7);
+    color: #2d3748;
+  }
+}
+
+.share-btn {
+  background: linear-gradient(135deg, #9B7CB0, #B896C4);
+  color: white;
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #8B6BA0, #A886B4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(155, 124, 176, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .share-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+
+    @media (max-width: 480px) {
+      font-size: 11px;
+      padding: 2px 6px;
+    }
+  }
+}
+
+.error-popup-external {
+  background-color: #fee;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  border: 1px solid #fed7d7;
+  font-size: 14px;
+  font-weight: 500;
+  animation: errorSlideIn 0.3s ease-out;
+  max-width: 520px;
+  width: 100%; // Changé de 90% à 100%
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(197, 48, 48, 0.2);
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+    padding: 10px 12px;
+    margin-top: 12px;
+  }
+}
+
+@keyframes errorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,127 @@
+<!-- share.component.html -->
+<div class="popover-backdrop" (click)="closeSharePopover()">
+  <div class="popover-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="popover-header">
+      <h3>Share "{{ fileData?.fileName }}"</h3>
+      <button class="close-btn" (click)="closeSharePopover()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="popover-body">
+      <!-- Add username section -->
+      <div class="add-username">
+        <input class="input-group"
+            [(ngModel)]="currUsername"
+            (keyup.enter)="verifyUsername(currUsername)"
+            type="text"
+            placeholder="Enter username...">
+        <button (click)="verifyUsername(currUsername)" 
+                [disabled]="!currUsername.trim()"
+                class="action-btn plus">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Username list -->
+      @if ((usernameList.length + alreadyAccess.length) > 0) {
+        <div class="users-container">
+          <!-- Pending shares -->
+          @if (usernameList.length > 0) {
+            <div class="users-section">
+              <h4 class="section-title">
+                <span class="section-icon">📤</span>
+                Will be shared with:
+              </h4>
+              @for (username of usernameList; track $index) {
+                <div class="user-item pending">
+                  <div class="user-info">
+                    <span class="user-avatar">👤</span>
+                    <span class="username">{{ username }}</span>
+                    <span class="user-role pending-badge">Pending</span>
+                  </div>
+                  <button (click)="clearUsername(username)" class="btn-remove" title="Remove from list">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Current access -->
+          @if (alreadyAccess.length > 0) {
+            <div class="users-section">
+              <h4 class="section-title">
+                <span class="section-icon">👥</span>
+                Current access:
+              </h4>
+              @for (user of alreadyAccess; track $index) {
+                <div class="user-item" [class.owner]="user.role === 'Owner'">
+                  <div class="user-info">
+                    <span class="user-avatar">{{ user.role === 'Owner' ? '👑' : '👤' }}</span>
+                    <span class="username">{{ user.username }}</span>
+                    <span class="user-role" [class.owner-role]="user.role === 'Owner'">
+                      {{ user.role }}
+                    </span>
+                  </div>
+                  @if (user.role === "Owner") {
+                    <div class="owner-badge">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
+                      </svg>
+                    </div>
+                  } 
+                  @else {
+                    <button (click)="removeAccess(user.username)" 
+                            class="btn-revoke" 
+                            title="Revoke access">
+                      <span>Revoke</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                      </svg>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="popover-footer">
+      <button class="cancel-btn" (click)="closeSharePopover()">
+        Cancel
+      </button>
+      <button (click)="shareFile()" 
+              [disabled]="usernameList.length === 0"
+              class="share-btn">
+        <span>Share</span>
+        @if (usernameList.length > 0) {
+          <span class="share-count">{{ usernameList.length }}</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (sharePopoverState.error()) {
+    <div class="error-popup-external">
+      {{ sharePopoverState.error() }}
+    </div>
+  }
+</div>

@@ -20,9 +20,9 @@ export interface AppError {
 @Injectable({
     providedIn: 'root'
 })
-export class FileErrorHandlerService {
+export class verifyErrorHandlerService {
 
-    private readonly userState = inject(UserState);
+    readonly userState: UserState = inject(UserState)
     private readonly tokenService = inject(TokenService)
     readonly sharePopover: SharePopoverState = inject(SharePopoverState)
 
@@ -42,8 +42,14 @@ export class FileErrorHandlerService {
             }
         }
         else if (appError.statusCode === 400){
-            this.sharePopover.setError("Error while sharing file")
-        } 
+            this.sharePopover.setError("User does not exist")
+        }
+        else if (appError.statusCode === 412){
+            this.sharePopover.setError("This user has already access to this file")
+        }
+        else {
+            this.sharePopover.setError(appError.message.error)
+        }
         return throwError(() => appError);
     }
     

@@ -4,11 +4,17 @@ import { catchError, map, Observable, tap } from "rxjs";
 import { UserState } from "../../../state/userState.service";
 import { FileErrorHandlerService } from "./errorHandler/FileErrorHandler.service";
 import { NavigateService } from "../../../navigation/navigation.service";
+import { WebSocketService } from "../../websocket/websocket.service";
 
 export interface File{
   fileUUID: string,
   fileName: string,
   fileUpdatedAt: Date
+}
+
+export interface SharedUser{
+    username: string,
+    role: string
 }
 
 @Injectable({
@@ -20,6 +26,7 @@ export class FileServiceAPI {
     readonly userState: UserState = inject(UserState)
     readonly errorHandler: FileErrorHandlerService = inject(FileErrorHandlerService)
     readonly navigator: NavigateService = inject(NavigateService)
+    readonly websocketService: WebSocketService = inject(WebSocketService)
 
     constructor(private http: HttpClient) {}
 
@@ -29,9 +36,9 @@ export class FileServiceAPI {
             this.userState.logout()
         }
         const retryWithSameUuid = () => this.create(fileUUID);
-        return this.http.get(`${this.urlServer}/v1/file/create`, { 
-            headers: new HttpHeaders().set("Authorization", `Bearer ${token}`), 
-            params: { uuid: fileUUID }
+        return this.http.post(`${this.urlServer}/v1/file/create`, 
+            { file_uuid: fileUUID, session_uuid: this.websocketService.sessionUUID }, 
+            { headers: new HttpHeaders().set("Authorization", `Bearer ${token}`)
         })
             .pipe(
                 tap((res: any) => {
@@ -49,9 +56,9 @@ export class FileServiceAPI {
             this.userState.logout()
         }
         const retryWithSameUuid = () => this.delete(fileUUID);
-        return this.http.get(`${this.urlServer}/v1/file/delete`, { 
+        return this.http.delete(`${this.urlServer}/v1/file/delete`, { 
             headers: new HttpHeaders().set("Authorization", `Bearer ${token}`), 
-            params: { uuid: fileUUID }
+            params: { file_uuid: fileUUID, session_uuid: this.websocketService.sessionUUID }
         })
             .pipe(
                 catchError(error => {
@@ -59,6 +66,25 @@ export class FileServiceAPI {
                 })
             );
     }
+
+    shareFile(fileUUID: string, usernames: string[]): Observable<void> {
+        let token = this.userState.getToken()
+        if (!token){
+            this.userState.logout()
+        }
+        const retryWithSameUuid = () => this.shareFile(fileUUID, usernames);
+        return this.http.post(`${this.urlServer}/v1/file/share`, 
+            { file_uuid: fileUUID, usernames: usernames},
+            { headers: new HttpHeaders().set("Authorization", `Bearer ${token}`)
+        })
+            .pipe(
+                catchError(error => {
+                    return this.errorHandler.handleError(error, retryWithSameUuid)
+                })
+            );
+    }
+
+    
 
     getFiles(): Observable<File[]> {
         let token = this.userState.getToken()
@@ -77,6 +103,50 @@ export class FileServiceAPI {
                 }))),
                 catchError(error => {
                     return this.errorHandler.handleError(error, retryGetFile)
+                })
+            );
+    }
+
+    getAlreadySharedUser(fileUUID: string): Observable<SharedUser[]> {
+        let token = this.userState.getToken()
+        if (!token){
+            this.userState.logout()
+        }
+        const retryGgetAlreadySharedUser = () => this.getAlreadySharedUser(fileUUID);
+        return this.http.get<any[]>(`${this.urlServer}/v1/file/getSharedUser`, { 
+            headers: new HttpHeaders().set("Authorization", `Bearer ${token}`),
+            params: { file_uuid: fileUUID }
+        })
+            .pipe(
+                map((res: any[]) => {
+                    if (!Array.isArray(res)) {
+                        console.warn('Expected array but got:', res);
+                        return [];
+                    }
+                    return res.map(user => ({
+                        username: user.username,
+                        role: user.role
+                    }));
+                }),
+                catchError(error => {
+                    return this.errorHandler.handleError(error, retryGgetAlreadySharedUser)
+                })
+            );
+    }
+
+    removeAccess(fileUUID: string, username: string): Observable<void> {
+        let token = this.userState.getToken()
+        if (!token){
+            this.userState.logout()
+        }
+        const retryRemoveAccess = () => this.removeAccess(fileUUID, username);
+         return this.http.delete(`${this.urlServer}/v1/file/removeUser`, { 
+            headers: new HttpHeaders().set("Authorization", `Bearer ${token}`),
+            params: { file_uuid: fileUUID, username: username }
+        })
+            .pipe(
+                catchError(error => {
+                    return this.errorHandler.handleError(error, retryRemoveAccess)
                 })
             );
     }

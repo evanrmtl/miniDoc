@@ -1,12 +1,21 @@
 html, body {
     height: 100%;
     margin: 0;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.app-container {
+    min-height: 100vh;
+    transition: filter 0.3s ease;
 }
 
 .blur-background {
     filter: blur(1.5px);
     pointer-events: none;
     overflow: hidden;
+    height: 100vh;
+    position: fixed;
+    width: 100%;
 }
 
 .notification {
@@ -15,19 +24,44 @@ html, body {
     top: 20px;
     right: 20px;
     z-index: 10000;
-    padding: 10px 15px;
-    min-width: 200px;
-    border-radius: 6px;
+    padding: 12px 16px;
+    min-width: 250px;
+    border-radius: 8px;
     color: #fff;
-    font-weight: bold;
+    font-weight: 600;
     text-align: center;
-    &.success{
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.3s ease-out;
+    
+    &.success {
         background-color: #4caf50;
     }
-    &.error{
-        background-color: #b84646;
+    
+    &.error {
+        background-color: #e53e3e;
     }
-    &.info{
-        background-color: rgb(124, 124, 253);
+    
+    &.info {
+        background-color: #3182ce;
     }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.modal-overlay {
+    position: relative;
+    z-index: 9000;
+}
+
+app-share {
+    z-index: 9500;
 }
