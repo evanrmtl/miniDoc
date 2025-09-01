@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { SharePopoverState } from '../../../core/state/sharePopoverState.service';
 import { VerifyServiceAPI } from '../../../core/services/API/verify/verifyAPI.service';
 import { UserState } from '../../../core/state/userState.service';
+import { NavigateService } from '../../../core/navigation/navigation.service';
 
 @Component({
   selector: 'app-share',
@@ -21,6 +22,7 @@ export class ShareComponent {
   readonly verifyServiceAPI: VerifyServiceAPI = inject(VerifyServiceAPI)
   readonly sharePopoverState: SharePopoverState = inject(SharePopoverState)
   readonly userState: UserState = inject(UserState)
+  readonly natigator: NavigateService = inject(NavigateService)
 
   protected currUsername = ""
   protected usernameList: string[] = [];
@@ -35,6 +37,7 @@ export class ShareComponent {
           console.log(this.alreadyAccess)
         },
         error: (error) => {
+            this.closeSharePopover()
             console.error('get already shared users:', error);
         }
       })
@@ -85,6 +88,7 @@ export class ShareComponent {
   closeSharePopover() {
     this.sharePopoverState.clearError();
     this.close.emit();
+    this.natigator.navigateToHome()
   }
 
   shareFile(){
