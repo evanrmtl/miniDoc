@@ -19,20 +19,21 @@ export class RichTextEditorComponent implements OnInit {
   readonly websocketState: WebSocketState = inject(WebSocketState)
   readonly websocketService: WebSocketService = inject(WebSocketService)
   readonly navigator: NavigateService = inject(NavigateService)
+  private file_uuid: string | null;
 
   constructor(private route: ActivatedRoute){
     this.lseq = new LSEQ();
     this.ropeTree = new RopeTree();
+    this.file_uuid = this.route.snapshot.paramMap.get('uuid');
   }
 
   ngOnInit(): void {
-    const file_uuid = this.route.snapshot.paramMap.get('uuid');
-    this.websocketService.sendMessage("joinFile", file_uuid)
+    this.websocketService.sendMessage("joinFile", this.file_uuid)
     //TODO fetch fileContent
   }
 
   ngOnDestroy(): void {
-    this.websocketService.sendMessage("exitFile")
+    this.websocketService.sendMessage("exitFile", this.file_uuid)
   }
 
   insertCharAtPosition(position: number, char: string) {

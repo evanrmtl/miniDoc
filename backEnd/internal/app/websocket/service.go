@@ -39,7 +39,6 @@ func (manager *ConnectionManager) writePump() {
 				if err != nil {
 					return
 				}
-				fmt.Println("message written: ", string(message))
 				_, err = w.Write(message)
 				if err != nil {
 					return
@@ -107,9 +106,9 @@ func (manager *ConnectionManager) handleTextMessage(msg []byte, db *gorm.DB, sen
 	case "auth":
 		manager.handleAuthentication(msg, db, sendChan)
 	case "joinFile":
-		manager.clientSocket.handleJoinFile(msg)
+		manager.handleJoinFile(msg)
 	case "exitFile":
-		redisUtils.DeleteFileInSession(manager.clientSocket.client.SessionID, manager.clientSocket.socket.ctx)
+		manager.handleExitFile()
 	}
 }
 
@@ -174,7 +173,7 @@ func (manager *ConnectionManager) handleAuthentication(msg []byte, db *gorm.DB, 
 	redisUtils.StoreSessionInRedis(manager.clientSocket.client.UserID, manager.clientSocket.client.SessionID, ctx)
 }
 
-func (cs *ClientSocket) handleJoinFile(msg []byte) {
+func (manager *ConnectionManager) handleJoinFile(msg []byte) {
 	var data struct {
 		FileUUID string `json:"data"`
 	}
@@ -184,7 +183,17 @@ func (cs *ClientSocket) handleJoinFile(msg []byte) {
 		fmt.Println("error while unmarshall data in handleJoinFile")
 		return
 	}
-	redisUtils.AddFileInSession(data.FileUUID, cs.client.SessionID, cs.socket.ctx)
+	manager.currentFileUUID = data.FileUUID
+	redisUtils.AddFileInSession(data.FileUUID, manager.clientSocket.client.SessionID, manager.clientSocket.socket.ctx)
+	manager.connections.AddSessionToDoc(data.FileUUID, manager.clientSocket.client.SessionID)
+	fmt.Println("manager.currentFileUUID: ", manager.currentFileUUID)
+}
+
+func (manager *ConnectionManager) handleExitFile() {
+	manager.DeleteSessionInDoc()
+	redisUtils.DeleteFileInSession(manager.clientSocket.client.SessionID, manager.clientSocket.socket.ctx)
+
+	fmt.Println("manager.currentFileUUID: ", manager.currentFileUUID)
 }
 
 func (cs *ClientSocket) sendResponse(sendChan chan []byte, msgType string, data interface{}) {

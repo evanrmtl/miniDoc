@@ -2,12 +2,25 @@ package redisUtils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
+
+	"github.com/evanrmtl/miniDoc/internal/common"
+	"github.com/joho/godotenv"
 )
 
+var currentServer string
+
 func StartSubscriber(ctx context.Context) {
+
+	err := godotenv.Load()
+	if err != nil {
+		panic(".env file not founded or error loading it")
+	}
+	currentServer = os.Getenv("SERVER_NAME")
 
 	go func() {
 		for {
@@ -58,9 +71,29 @@ func subRedis(ctx context.Context) error {
 			}
 			switch msg.Channel {
 			case ChanUserNotification:
-				go HandleUserNotification(ctx, msg.Payload)
+				var notification common.UserNotification
+				err := json.Unmarshal([]byte(msg.Payload), &notification)
+				if err != nil {
+					log.Printf("Failed unmarshalling notification: %v", err)
+					continue
+				}
+
+				if notification.ServerName == currentServer {
+					continue
+				}
+				go HandleUserNotification(ctx, notification)
 			case ChanFileEvent:
-				// handle file event
+				var event common.FileEvent
+				err := json.Unmarshal([]byte(msg.Payload), &event)
+				if err != nil {
+					log.Printf("Failed unmarshalling notification: %v", err)
+					continue
+				}
+
+				if event.ServerName == currentServer {
+					continue
+				}
+				go HandleDocEvent(ctx, event)
 			}
 		}
 	}

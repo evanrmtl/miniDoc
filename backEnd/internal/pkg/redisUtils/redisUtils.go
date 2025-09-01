@@ -2,8 +2,6 @@ package redisUtils
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 
@@ -61,19 +59,22 @@ func DeleteFileInSession(sessionUUID string, ctx context.Context) {
 	}
 }
 
-func SetNotificationRouter(router common.NotificationRouter) {
+func GetFileFromSession(sessionUUID string, ctx context.Context) string {
+	return redisConnection.client.HGet(ctx, "session:"+sessionUUID, "file_uuid").Val()
+}
+
+func SetEventRouter(router common.NotificationRouter) {
 	notificationRouter = router
 }
 
-func HandleUserNotification(ctx context.Context, msg string) {
-	var notification common.UserNotification
-	err := json.Unmarshal([]byte(msg), &notification)
-	if err != nil {
-		log.Printf("error unmarshalling message User Notification: %v", err)
-		return
-	}
-	fmt.Println("notification: ", notification)
+func HandleUserNotification(ctx context.Context, notification common.UserNotification) {
 	if notificationRouter != nil {
-		notificationRouter.RouteToUser(notification)
+		notificationRouter.RouteEvent(notification)
+	}
+}
+
+func HandleDocEvent(ctx context.Context, event common.FileEvent) {
+	if notificationRouter != nil {
+		notificationRouter.RouteEvent(event)
 	}
 }

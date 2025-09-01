@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -47,20 +48,22 @@ type ClientData struct {
 }
 
 type ConnectionManager struct {
-	ctx          context.Context
-	cancel       context.CancelFunc
-	clientSocket ClientSocket
-	send         chan []byte
-	connections  *SafeConnectionPool
-	pingInterval time.Duration
-	writeTimeout time.Duration
-	readTimeout  time.Duration
+	ctx             context.Context
+	cancel          context.CancelFunc
+	clientSocket    ClientSocket
+	send            chan []byte
+	connections     *SafeConnectionPool
+	pingInterval    time.Duration
+	writeTimeout    time.Duration
+	readTimeout     time.Duration
+	currentFileUUID string
 }
 
 type SafeConnectionPool struct {
-	pool      sync.Map // sessionID -> *Websocket.Conn
-	userIndex sync.Map // userID -> []string
-	managers  sync.Map // sessionID -> *ConnectionManager
+	pool        sync.Map // sessionID -> *Websocket.Conn
+	userIndex   sync.Map // userID -> []string
+	managers    sync.Map // sessionID -> *ConnectionManager
+	docSessions sync.Map // docID -> []string
 }
 
 var sConnectionPool = &SafeConnectionPool{}
@@ -111,7 +114,12 @@ func (manager *ConnectionManager) Start(db *gorm.DB, srvContext context.Context)
 	<-manager.ctx.Done()
 	fmt.Println("🔴 websocket disconnected")
 	Cleanupctx := context.Background()
-	redisUtils.DeleteSessionInRedis(manager.clientSocket.client.SessionID, Cleanupctx)
 	manager.DeleteLocal()
-
+	redisUtils.DeleteSessionInRedis(manager.clientSocket.client.SessionID, Cleanupctx)
+	var docSessionsList []string
+	manager.connections.docSessions.Range(func(key, value interface{}) bool {
+		docSessionsList = append(docSessionsList, fmt.Sprintf("%v: %v", key, value))
+		return true
+	})
+	log.Println("manager docSession: ", docSessionsList)
 }

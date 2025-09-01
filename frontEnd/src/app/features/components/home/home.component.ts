@@ -63,7 +63,6 @@ export class HomeComponent implements OnInit {
     this.fileService.create(fileUUID).subscribe({
       next: () => {
         this.navigator.navigateToFile(fileUUID)
-        this.files()
       },
       error: () => {
          this.notification.show("Couldn't create file, try again", 'error');

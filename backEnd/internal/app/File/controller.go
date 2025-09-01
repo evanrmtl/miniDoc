@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 
 var (
 	ErrFindFile = errors.New("errors while finding file")
+	serverName  = os.Getenv("SERVER_NAME")
 )
 
 func CreateFileController(c *gin.Context, db *gorm.DB) {
@@ -147,8 +149,18 @@ func DeleteFileController(c *gin.Context, db *gorm.DB) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 			return
 		}
+
+		newNotification := common.FileEvent{
+			EventType: "file_deleted",
+			FileUUID:  file_uuid,
+		}
+
+		err = redisUtils.PublishFileDeleteEvent(ctx, newNotification)
+		if err != nil {
+			break
+		}
+
 		c.JSON(http.StatusNoContent, nil)
-		//TODO pub/sub notification file delete, disconnect every user on the file
 		return
 	case models.RoleCollaborator:
 		_, err = gorm.G[models.UsersFile](db).Where("user_id = ?", userID).Where("file_uuid = ?", file_uuid).Delete(ctx)
@@ -243,6 +255,7 @@ func ShareFileController(c *gin.Context, db *gorm.DB) {
 				SharedUser:    users,
 			},
 		}
+
 		err = redisUtils.PublishUserSharedNotification(ctx, newNotification)
 		if err != nil {
 			errPublish = err
@@ -384,6 +397,7 @@ func RemovedUserController(c *gin.Context, db *gorm.DB) {
 			FileUUID: fileUUID,
 		},
 	}
+
 	err = redisUtils.PublishUserRevokeNotification(ctx, newNotification)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "couldn't revoke user from file"})

@@ -35,6 +35,10 @@ export interface revokeFileData {
     fileUUID: string;
 }
 
+export interface FileEvent {
+    eventType: string;
+    data: any;
+}
 
 @Injectable({
     providedIn: 'root'
@@ -142,8 +146,11 @@ export class WebSocketService {
                 this.disconnect()
                 break;
             case 'notification':
-                console.log(message)
                 this.handleFileNotification(message);
+                break;
+            case 'file_event':
+                console.log(message)
+                this.handleFileEvent(message);
                 break;
             default:
                 break;
@@ -159,6 +166,11 @@ export class WebSocketService {
         this.fileNotifications.next(notification)
     }
 
+
+    private handleFileEvent(message: any){
+        this.navigator.navigateToHome()
+        this.notification.show("This file has been deleted by its owner", "info")
+    }
 
 
     replaceJWT(token: string): void {

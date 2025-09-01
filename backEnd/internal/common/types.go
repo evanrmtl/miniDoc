@@ -1,6 +1,7 @@
 package common
 
 type UserNotification struct {
+	ServerName       string      `json:"serverName"`
 	NotificationType string      `json:"notificationType"`
 	TargetUser       uint32      `json:"targetUser"`
 	FileData         interface{} `json:"fileData"`
@@ -22,6 +23,11 @@ type RevokeFileData struct {
 	FileUUID string `json:"fileUUID"`
 }
 
+type FileEvent struct {
+	ServerName string `json:"serverName"`
+	EventType  string `json:"eventType"`
+	FileUUID   string `json:"fileData"`
+}
 type NotificationRouter interface {
-	RouteToUser(notification UserNotification)
+	RouteEvent(notification interface{})
 }
