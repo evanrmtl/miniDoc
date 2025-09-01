@@ -30,15 +30,16 @@
           />
         </div>
       </div>
-      <div class="create-section">
-        <button class="create-file-btn" type="button" (click)="createFile()">
-          <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          Create a file
-        </button>
-      </div>
-
+      @if (!this.modalState.isOpen()) {
+        <div class="create-section">
+          <button class="create-file-btn" type="button" (click)="createFile()">
+            <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Create a file
+          </button>
+        </div>
+      }
       @if (userState.isLoggedIn()) {
         <div class="user-files-container">
           <h2 class="files-header">My Files</h2>

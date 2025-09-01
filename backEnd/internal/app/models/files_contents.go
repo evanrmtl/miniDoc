@@ -9,7 +9,7 @@ type FilesContentsMigration struct {
 	Path           []byte `gorm:"column:char_path;not null" json:"path"`
 	Style          uint32 `gorm:"column:char_style;not null" json:"style"`
 	Color          string `gorm:"column:color;not null" json:"color"`
-	FileUUID       uint32 `gorm:"column:file_uuid;not null"`
+	FileUUID       string `gorm:"column:file_uuid;not null"`
 }
 
 // TableName File's table name
@@ -23,6 +23,6 @@ type FilesContents struct {
 	Path           []byte `gorm:"column:path;not null" json:"path"`
 	Style          uint32 `gorm:"column:style;not null" json:"style"`
 	Color          string `gorm:"column:color;not null" json:"color"`
-	FileUUID       uint32 `gorm:"column:file_uuid;not null"`
+	FileUUID       string `gorm:"column:file_uuid;not null"`
 	File           File   `gorm:"foreignKey:FileUUID"`
 }
