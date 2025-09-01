@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/evanrmtl/miniDoc/internal/common"
@@ -38,10 +37,24 @@ func (manager *ConnectionManager) addManager(sessionID string) {
 	manager.connections.managers.Store(sessionID, manager)
 }
 
+func (p *SafeConnectionPool) AddSessionToDoc(docUUID string, sessionID string) {
+	value, ok := p.docSessions.Load(docUUID)
+	if ok {
+		sessions := value.([]string)
+		newSession := make([]string, len(sessions)+1)
+		copy(newSession, sessions)
+		newSession[len(sessions)] = sessionID
+		p.docSessions.Store(docUUID, newSession)
+	} else {
+		p.docSessions.Store(docUUID, []string{sessionID})
+	}
+}
+
 func (manager *ConnectionManager) DeleteLocal() {
 	manager.deleteLocalSession()
 	manager.deleteUserIndex()
 	manager.deleteManagersMap()
+	manager.DeleteSessionInDoc()
 }
 
 func (manager *ConnectionManager) deleteLocalSession() {
@@ -80,6 +93,35 @@ func (manager *ConnectionManager) deleteManagersMap() {
 	manager.connections.managers.Delete(sessionID)
 }
 
+func (manager *ConnectionManager) DeleteSessionInDoc() {
+
+	docUUID := manager.currentFileUUID
+	sessionID := manager.clientSocket.client.SessionID
+
+	value, ok := manager.connections.docSessions.Load(docUUID)
+	if !ok {
+		return
+	}
+
+	sessions := value.([]string)
+
+	idx := searchIndex(sessionID, sessions)
+	if idx == -1 {
+		return
+	}
+
+	newSessions := make([]string, 0, len(sessions)-1)
+	newSessions = append(newSessions, sessions[:idx]...)
+	newSessions = append(newSessions, sessions[idx+1:]...)
+
+	if len(newSessions) == 0 {
+		manager.connections.docSessions.Delete(docUUID)
+	} else {
+		manager.connections.docSessions.Store(docUUID, newSessions)
+	}
+	manager.currentFileUUID = ""
+}
+
 func searchIndex(searchSession string, sessions []string) int {
 	for i, session := range sessions {
 		if session == searchSession {
@@ -89,7 +131,20 @@ func searchIndex(searchSession string, sessions []string) int {
 	return -1
 }
 
-func (p *SafeConnectionPool) RouteToUser(notification common.UserNotification) {
+func (p *SafeConnectionPool) RouteEvent(event interface{}) {
+	switch v := event.(type) {
+	case common.UserNotification:
+		p.routeToUser(v)
+
+	case common.FileEvent:
+		p.routeToDocument(v)
+
+	default:
+		log.Printf("Unknown notification type: %T", v)
+	}
+}
+
+func (p *SafeConnectionPool) routeToUser(notification common.UserNotification) {
 	value, ok := p.userIndex.Load(notification.TargetUser)
 	if !ok {
 		log.Println("targetUser is not in the map userIndex")
@@ -100,7 +155,6 @@ func (p *SafeConnectionPool) RouteToUser(notification common.UserNotification) {
 		Type: "notification",
 		Data: notification,
 	}
-	fmt.Println("notification in RouteToUser: ", notification)
 	bResponse, err := json.Marshal(responseStruct)
 	if err != nil {
 		log.Println("error marshaling response notification")
@@ -122,6 +176,39 @@ func (p *SafeConnectionPool) RouteToUser(notification common.UserNotification) {
 	}
 }
 
+func (p *SafeConnectionPool) routeToDocument(fileEvent common.FileEvent) {
+	value, ok := p.docSessions.Load(fileEvent.FileUUID)
+	if !ok {
+		log.Printf("No sessions found for document %s", fileEvent.FileUUID)
+		return
+	}
+
+	sessions := value.([]string)
+	responseStruct := Response{
+		Type: "file_event",
+		Data: fileEvent,
+	}
+	bResponse, err := json.Marshal(responseStruct)
+	if err != nil {
+		log.Println("error marshaling file event")
+		return
+	}
+
+	for _, sessionID := range sessions {
+		if managerValue, ok := p.managers.Load(sessionID); ok {
+			manager := managerValue.(*ConnectionManager)
+			go func(mgr *ConnectionManager, sID string) {
+				select {
+				case mgr.send <- bResponse:
+
+				default:
+
+				}
+			}(manager, sessionID)
+		}
+	}
+}
+
 func Init() {
-	redisUtils.SetNotificationRouter(sConnectionPool)
+	redisUtils.SetEventRouter(sConnectionPool)
 }
