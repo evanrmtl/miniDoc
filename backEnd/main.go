@@ -10,8 +10,9 @@ import (
 	"time"
 
 	database "github.com/evanrmtl/miniDoc/internal/app/database"
+	"github.com/evanrmtl/miniDoc/internal/app/websocket"
 	routes "github.com/evanrmtl/miniDoc/internal/middleware"
-	redisUtils "github.com/evanrmtl/miniDoc/internal/pkg/redisUtils"
+	"github.com/evanrmtl/miniDoc/internal/pkg/redisUtils"
 	sessionsUtils "github.com/evanrmtl/miniDoc/internal/pkg/sessionUtils"
 )
 
@@ -28,9 +29,7 @@ func main() {
 
 	go sessionsUtils.DeleteExpiredSession(ctx, db)
 
-	srv := &http.Server{Addr: ":3000", Handler: routes.CreateRoutes(db)}
-
-	redisUtils.CreateRedis(ctx)
+	srv := &http.Server{Addr: ":3000", Handler: routes.CreateRoutes(db, ctx)}
 
 	go func() {
 		err := srv.ListenAndServe()
@@ -38,6 +37,10 @@ func main() {
 			log.Fatalf("serveur arrêt: %v", err)
 		}
 	}()
+
+	websocket.Init()
+	redisUtils.CreateRedis(ctx)
+	redisUtils.StartSubscriber(ctx)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)

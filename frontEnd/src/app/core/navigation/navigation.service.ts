@@ -41,4 +41,8 @@ export class NavigateService{
         this.modalState.closeModal();
         return this.router.navigate([{ outlets: { modal: null } }]);
     }
+
+    navigateToFile(uuid: string): Promise<boolean> {
+        return this.router.navigate([`/file/${uuid}`])
+    }
 }

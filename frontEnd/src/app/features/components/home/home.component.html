@@ -1,48 +1,103 @@
 <div class="home-container">
+  <header class="site-header">
+    <div class="header-content">
+      <div class="brand">
+        <h1 class="logo">miniDoc</h1>
+      </div>
       @if (userState.isLoggedIn()) {
-        <header class="welcome-header">
-          <h1>Bienvenue, {{ userState.username() }}!</h1>
-          <p>Vous êtes connecté à votre espace personnel.</p>
-        </header>
-
-        <main class="main-content">
-          <div class="dashboard">
-            <h2>Tableau de bord</h2>
-            <div class="cards-grid">
-              <div class="card">
-                <h3>Documents</h3>
-                <p>Gérez vos documents</p>
-              </div>
-              <div class="card">
-                <h3>Profil</h3>
-                <p>Modifiez vos informations</p>
-              </div>
-              <div class="card">
-                <h3>Paramètres</h3>
-                <p>Configurez votre compte</p>
-              </div>
-            </div>
-          </div>
-        </main>
-      } @else {
-        <main class="main-content">
-            <div class="dashboard">
-              <h2>Tableau de bord</h2>
-              <div class="cards-grid">
-                <div class="card">
-                  <h3>Documents</h3>
-                  <p>Gérez vos documents</p>
-                </div>
-                <div class="card">
-                  <h3>Profil</h3>
-                  <p>Modifiez vos informations</p>
-                </div>
-                <div class="card">
-                  <h3>Paramètres</h3>
-                  <p>Configurez votre compte</p>
-                </div>
-              </div>
-            </div>
-          </main>
+        <div class="user-section">
+          <span class="username">{{ userState.username() }}</span>
+          <button class="edit-profile-btn" (click)="logout()">Logout</button>
+        </div>
       }
     </div>
+  </header>
+
+  <main class="main-content">
+    <div class="content-wrapper">
+      <div class="search-section">
+        <div class="search-bar">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input 
+            type="text" 
+            placeholder="Search your files..." 
+            class="search-input"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchChange()"
+          />
+        </div>
+      </div>
+      @if (!this.modalState.isOpen()) {
+        <div class="create-section">
+          <button class="create-file-btn" type="button" (click)="createFile()">
+            <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Create a file
+          </button>
+        </div>
+      }
+      @if (userState.isLoggedIn()) {
+        <div class="user-files-container">
+          <h2 class="files-header">My Files</h2>
+        
+          <div class="files-grid">
+            @for (file of filteredFiles; track file.fileUUID) {
+              <div class="file-card">
+                <div class="file-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14,2 14,8 20,8"/>
+                  </svg>
+                </div>
+                <div class="file-info">
+                  <h3 class="file-name">{{ file.fileName }}</h3>
+                  <div class="file-meta-section">
+                    <p class="file-meta-label">Last modification</p>
+                    <p class="file-meta-value">{{ file.fileUpdatedAt | date:"dd MMM y 'at' HH':'mm" }}</p>
+                  </div>
+                </div>
+                <div class="file-actions">
+                  <button class="action-btn edit-btn" (click)="editFile(file.fileUUID)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn share-btn" (click)="openPopover(file)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="18" cy="5" r="3"/>
+                      <circle cx="6" cy="12" r="3"/>
+                      <circle cx="18" cy="19" r="3"/>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn delete-btn" (click)="deleteFile(file)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3,6 5,6 21,6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      @if (filteredFiles?.length === 0 && !this.modalState.isOpen()) {
+        <div class="no-files">
+          @if (searchQuery.length > 0) {
+            <p class="wrong-query">This file name does not exist, try another name</p> 
+          }
+          @else {
+            <p class="new-user">Feel free to create a file by clicking the button "+ Create a file"</p>
+          } 
+        </div>
+      }
+    </div>
+  </main>
+</div>

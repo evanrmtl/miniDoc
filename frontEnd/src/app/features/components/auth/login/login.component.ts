@@ -1,10 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { AuthService } from '../../../../core/services/auth/auth.service';
+import { AuthService } from '../../../../core/services/API/auth/authAPI.service';
 import { NotificationService } from '../../../../core/services/notification/notification.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigateService } from '../../../../core/navigation/navigation.service';
 import { UserState } from '../../../../core/state/userState.service';
 import { CommonModule } from '@angular/common';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
 
 
 @Component({

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"time"
 
 	"github.com/evanrmtl/miniDoc/internal/middleware/subroute"
@@ -10,12 +11,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateRoutes(db *gorm.DB) *gin.Engine {
+func CreateRoutes(db *gorm.DB, ctx context.Context) *gin.Engine {
 	router := gin.Default()
+
+	router.Use(func(c *gin.Context) {
+		c.Next()
+	})
 
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"http://localhost:4200"}
-	config.AllowMethods = []string{"POST", "GET", "OPTIONS"}
+	config.AllowMethods = []string{"POST", "GET", "OPTIONS", "PATCH", "DELETE"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 	config.ExposeHeaders = []string{"Content-Length"}
 	config.AllowCredentials = true
@@ -23,8 +28,11 @@ func CreateRoutes(db *gorm.DB) *gin.Engine {
 
 	router.Use(cors.New(config))
 
-	subroute.CreateAuthRoutes(router, db)
-	subroute.CreateWSRoute(router, db)
+	v1 := router.Group("/v1")
+	subroute.CreateAuthRoutes(v1, db)
+	subroute.CreateWSRoute(v1, db, ctx)
+	subroute.CreateFileRoutes(v1, db)
+	subroute.CreateVerifyRoutes(v1, db)
 
 	return router
 }

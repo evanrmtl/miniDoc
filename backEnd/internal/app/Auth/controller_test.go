@@ -60,7 +60,8 @@ func setupTestRS256Key() {
 func createTestRoute() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	subroute.CreateAuthRoutes(r, testenv.DB)
+	rg := r.Group("/v1")
+	subroute.CreateAuthRoutes(rg, testenv.DB)
 	return r
 }
 

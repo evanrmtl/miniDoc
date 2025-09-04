@@ -2,11 +2,13 @@ package websocket
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/evanrmtl/miniDoc/internal/pkg/redisUtils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
@@ -46,27 +48,27 @@ type ClientData struct {
 }
 
 type ConnectionManager struct {
-	ctx          context.Context
-	cancel       context.CancelFunc
-	clientSocket ClientSocket
-	send         chan []byte
-	connections  *SafeConnectionPool
-	pingInterval time.Duration
-	writeTimeout time.Duration
-	readTimeout  time.Duration
+	ctx             context.Context
+	cancel          context.CancelFunc
+	clientSocket    ClientSocket
+	send            chan []byte
+	connections     *SafeConnectionPool
+	pingInterval    time.Duration
+	writeTimeout    time.Duration
+	readTimeout     time.Duration
+	currentFileUUID string
 }
 
 type SafeConnectionPool struct {
-	mu   sync.RWMutex
-	pool map[string]*websocket.Conn
+	pool        sync.Map // sessionID -> *Websocket.Conn
+	userIndex   sync.Map // userID -> []string
+	managers    sync.Map // sessionID -> *ConnectionManager
+	docSessions sync.Map // docID -> []string
 }
 
-var sConnectionPool = &SafeConnectionPool{
-	mu:   sync.RWMutex{},
-	pool: make(map[string]*websocket.Conn),
-}
+var sConnectionPool = &SafeConnectionPool{}
 
-func WebSocketHandler(c *gin.Context, db *gorm.DB) {
+func WebSocketHandler(c *gin.Context, db *gorm.DB, ctx context.Context) {
 
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -85,10 +87,8 @@ func WebSocketHandler(c *gin.Context, db *gorm.DB) {
 		socket: Socket{conn: conn, ctx: c},
 		client: ClientData{},
 	}
-	log.Println("🟢 WebSocket handler ouvert")
 
 	defer func() {
-		log.Println("🔴 WebSocket handler terminé, fermeture connexion")
 		conn.Close()
 	}()
 
@@ -101,19 +101,25 @@ func WebSocketHandler(c *gin.Context, db *gorm.DB) {
 		writeTimeout: time.Second * 10,
 	}
 
-	manager.Start(db)
+	manager.Start(db, ctx)
 }
 
-func (manager *ConnectionManager) Start(db *gorm.DB) {
-	manager.ctx, manager.cancel = context.WithCancel(context.Background())
+func (manager *ConnectionManager) Start(db *gorm.DB, srvContext context.Context) {
+	manager.ctx, manager.cancel = context.WithCancel(srvContext)
 
 	go manager.writePump()
 	go manager.readPump(db)
 
+	fmt.Println("🟢 websocket connected")
 	<-manager.ctx.Done()
-	log.Println("pool avant localDelete:", manager.connections.pool)
-	manager.deleteLocal()
+	fmt.Println("🔴 websocket disconnected")
 	Cleanupctx := context.Background()
-	manager.clientSocket.deleteSessionInRedis(Cleanupctx)
-	log.Println("pool apres localDelete:", manager.connections.pool)
+	manager.DeleteLocal()
+	redisUtils.DeleteSessionInRedis(manager.clientSocket.client.SessionID, Cleanupctx)
+	var docSessionsList []string
+	manager.connections.docSessions.Range(func(key, value interface{}) bool {
+		docSessionsList = append(docSessionsList, fmt.Sprintf("%v: %v", key, value))
+		return true
+	})
+	log.Println("manager docSession: ", docSessionsList)
 }

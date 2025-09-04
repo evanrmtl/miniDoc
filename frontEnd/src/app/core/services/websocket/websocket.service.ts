@@ -4,12 +4,39 @@ import { WebSocketErrorHandler } from "./errorHandler/webSocketHandler.service";
 import { AuthEventBus } from "../../events/authEvent/authEvent.service";
 import { Token, TokenService } from "../token/token.service";
 import { NavigateService } from "../../navigation/navigation.service";
-import { range } from "rxjs";
-import { webSocket } from "rxjs/webSocket";
+import { BehaviorSubject, Observable, range } from "rxjs";
 import { NotificationService } from "../notification/notification.service";
+import { not } from "rxjs/internal/util/not";
 
 interface Message{
     type: string;
+    data: any;
+}
+
+export interface FileNotification {
+    notificationType: string;
+    targetUser: number;
+    data: SharedFileData | revokeFileData;
+}
+
+export interface SharedUsers{
+    username: string;
+    role: string;
+}
+
+export interface SharedFileData {
+    fileUUID: string;
+    fileName: string;
+    updatedAt: number;
+    sharedUsers: SharedUsers[];
+}
+
+export interface revokeFileData {
+    fileUUID: string;
+}
+
+export interface FileEvent {
+    eventType: string;
     data: any;
 }
 
@@ -26,10 +53,12 @@ export class WebSocketService {
     readonly navigator: NavigateService = inject(NavigateService);
     readonly notification: NotificationService = inject(NotificationService)
 
-    private sessionId = crypto.randomUUID();
     private hasShownDisconnectNotif = false;
     private maxAutoReconnect: number = 4;
-    
+
+    private fileNotifications = new BehaviorSubject<FileNotification | null>(null);
+
+    public sessionUUID = crypto.randomUUID();
 
     connect(): void {
 
@@ -41,7 +70,7 @@ export class WebSocketService {
         }
 
         this.websocketState.setError(null);
-        this.socket = new WebSocket('ws://localhost:3000/ws');
+        this.socket = new WebSocket('ws://localhost:3000/v1/ws');
 
         this.updateFromSocket();
 
@@ -52,14 +81,13 @@ export class WebSocketService {
     }
 
     private onOpen = (event: Event) => {
-        console.log("server connecté");
         this.sendAuth();
         this.updateFromSocket();
         this.hasShownDisconnectNotif = false;
+        console.log("connected")
     };
 
     private onClose = async (event: CloseEvent) => {
-        console.log("WebSocket fermé");
         this.updateFromSocket();
         if (!event.wasClean) {
             if (!this.hasShownDisconnectNotif) {
@@ -80,8 +108,6 @@ export class WebSocketService {
     };
 
     private onMessage = (message: MessageEvent) => {
-        console.log("message arrive");
-        console.log(message)
         this.listenMessage(message);
     };
 
@@ -95,7 +121,7 @@ export class WebSocketService {
         const token = this.tokenService.getToken();
         const username = this.tokenService.getParsedToken()?.username;
         const userID = this.tokenService.getParsedToken()?.userId;
-        const sessionID = this.sessionId
+        const sessionID = this.sessionUUID
         
         if (token && username) {
             this.socket.send(JSON.stringify({
@@ -114,15 +140,37 @@ export class WebSocketService {
                 if (message.data.renewed === true){
                     this.replaceJWT(message.data.token);
                 }
+                this.notification.show('Connected !', 'success');
                 break;
             case 'Auth_failed':
                 this.disconnect()
+                break;
+            case 'notification':
+                this.handleFileNotification(message);
+                break;
+            case 'file_event':
+                console.log(message)
+                this.handleFileEvent(message);
                 break;
             default:
                 break;
         }
     }
 
+    private handleFileNotification(message: any){
+        const notification: FileNotification = {
+            notificationType: message.data.notificationType,
+            targetUser: message.data.targetUser,
+            data: message.data.fileData
+        };
+        this.fileNotifications.next(notification)
+    }
+
+
+    private handleFileEvent(message: any){
+        this.navigator.navigateToHome()
+        this.notification.show("This file has been deleted by its owner", "info")
+    }
 
 
     replaceJWT(token: string): void {
@@ -130,25 +178,24 @@ export class WebSocketService {
     }
 
     private updateFromSocket(){
-        if(!this.socket.readyState){
+        if(this.socket.readyState === undefined || this.socket.readyState === null){
             return;
         }
         switch(this.socket.readyState){
-            case this.socket.OPEN:
+           case WebSocket.OPEN:
                 this.websocketState.setIsReconnecting(false);
                 this.websocketState.setStatus('open');
                 this.websocketState.setIsOpen(true);
                 break;
-            case this.socket.CONNECTING:
-                this.websocketState.setIsReconnecting(false);
+            case WebSocket.CONNECTING:
                 this.websocketState.setStatus('connecting')
                 this.websocketState.setIsOpen(false);
                 break;
-            case this.socket.CLOSING:
+            case WebSocket.CLOSING:
                 this.websocketState.setStatus('closing');
                 this.websocketState.setIsOpen(false);
                 break;
-            case this.socket.CLOSED:
+            case WebSocket.CLOSED:
                 this.websocketState.setStatus('closed');
                 this.websocketState.setIsOpen(false);
                 break;
@@ -159,8 +206,8 @@ export class WebSocketService {
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             this.websocketState.setStatus('closing');
             this.socket.close();
-            this.eventBus.emit('LOGOUT_REQUEST')
         }
+        this.eventBus.emit('WEBSOCKET_LOGOUT')
     }
 
     autoReconnect(): Promise<boolean> {
@@ -171,7 +218,6 @@ export class WebSocketService {
         this.websocketState.setIsReconnecting(true)
         return new Promise<boolean>((resolve) => {
             const tryAgain = () => {
-                console.log("attempts nb :" + attempts)
                 if (this.socket.readyState === this.socket.OPEN) {
                     resolve(true);
                     return;
@@ -186,5 +232,16 @@ export class WebSocketService {
             };
             tryAgain();
         });
+    }
+
+    sendMessage(type: string, data: string | null = null){
+          this.socket.send(JSON.stringify({
+                type: type, 
+                data: data
+            }));
+    }
+
+    getFileNotifications(): Observable<FileNotification | null> {
+        return this.fileNotifications.asObservable();
     }
 }

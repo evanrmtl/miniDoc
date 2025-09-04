@@ -143,6 +143,7 @@ func ValidJWT(token string, agent string, ctx context.Context, db *gorm.DB) erro
 	if err != nil {
 		return ErrPayloadDecode
 	}
+
 	var payload jwtPayload
 	err = json.Unmarshal(decodedPayload, &payload)
 	if err != nil {
@@ -164,4 +165,39 @@ func ValidJWT(token string, agent string, ctx context.Context, db *gorm.DB) erro
 		return ErrJWTExpired
 	}
 	return nil
+}
+
+func seperatePayload(token string) (jwtPayload, error) {
+	var payload jwtPayload
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return payload, ErrInvalidJWTFormat
+	}
+
+	decodedPayload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return payload, ErrPayloadDecode
+	}
+
+	err = json.Unmarshal(decodedPayload, &payload)
+	if err != nil {
+		return payload, ErrJWTPayloadMarshal
+	}
+	return payload, nil
+}
+
+func GetUserID(token string, ctx context.Context, db *gorm.DB) (uint32, error) {
+	payload, err := seperatePayload(token)
+	if err != nil {
+		return 0, err
+	}
+	return payload.UserID, nil
+}
+
+func GetUsername(token string, ctx context.Context, db *gorm.DB) (string, error) {
+	payload, err := seperatePayload(token)
+	if err != nil {
+		return "", err
+	}
+	return payload.Username, nil
 }

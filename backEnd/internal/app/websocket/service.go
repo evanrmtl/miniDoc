@@ -3,10 +3,12 @@ package websocket
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/evanrmtl/miniDoc/internal/pkg/jwtUtils"
+	"github.com/evanrmtl/miniDoc/internal/pkg/redisUtils"
 	sessionsUtils "github.com/evanrmtl/miniDoc/internal/pkg/sessionUtils"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
@@ -80,18 +82,18 @@ func (manager *ConnectionManager) readPump(db *gorm.DB) {
 		if err != nil {
 			return
 		}
-		go manager.clientSocket.handleIncomingMessage(messageType, msg, db, manager.send)
+		go manager.handleIncomingMessage(messageType, msg, db, manager.send)
 	}
 }
 
-func (cs *ClientSocket) handleIncomingMessage(messageType int, msg []byte, db *gorm.DB, sendChan chan []byte) {
+func (manager *ConnectionManager) handleIncomingMessage(messageType int, msg []byte, db *gorm.DB, sendChan chan []byte) {
 	switch messageType {
 	case websocket.TextMessage:
-		cs.handleTextMessage(msg, db, sendChan)
+		manager.handleTextMessage(msg, db, sendChan)
 	}
 }
 
-func (cs *ClientSocket) handleTextMessage(msg []byte, db *gorm.DB, sendChan chan []byte) {
+func (manager *ConnectionManager) handleTextMessage(msg []byte, db *gorm.DB, sendChan chan []byte) {
 	var messageType struct {
 		Type string
 	}
@@ -102,14 +104,18 @@ func (cs *ClientSocket) handleTextMessage(msg []byte, db *gorm.DB, sendChan chan
 	}
 	switch messageType.Type {
 	case "auth":
-		cs.handleAuthentication(msg, db, sendChan)
+		manager.handleAuthentication(msg, db, sendChan)
+	case "joinFile":
+		manager.handleJoinFile(msg)
+	case "exitFile":
+		manager.handleExitFile()
 	}
 }
 
-func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan chan []byte) {
+func (manager *ConnectionManager) handleAuthentication(msg []byte, db *gorm.DB, sendChan chan []byte) {
 
 	var authMessage struct {
-		ClientData ClientData `json:"data"`
+		Data ClientData `json:"data"`
 	}
 
 	err := json.Unmarshal(msg, &authMessage)
@@ -118,29 +124,31 @@ func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan c
 		return
 	}
 
-	ctx := cs.socket.ctx.Request.Context()
-	agent := cs.socket.ctx.Request.UserAgent()
+	ctx := manager.clientSocket.socket.ctx.Request.Context()
+	agent := manager.clientSocket.socket.ctx.Request.UserAgent()
 
-	err = jwtUtils.ValidJWT(authMessage.ClientData.Token, agent, ctx, db)
+	err = jwtUtils.ValidJWT(authMessage.Data.Token, agent, ctx, db)
 
 	if err != nil && !errors.Is(err, jwtUtils.ErrJWTExpired) {
-		cs.sendResponse(sendChan, MessageTypeAuthFailed, nil)
+		fmt.Println(err)
+		fmt.Println(authMessage.Data.Token)
+		manager.clientSocket.sendResponse(sendChan, MessageTypeAuthFailed, nil)
 		return
 	}
 
-	sessionsUtils.CreateSession(authMessage.ClientData.UserID, agent, ctx, db)
+	sessionsUtils.CreateSession(authMessage.Data.UserID, agent, ctx, db)
 
-	cs.client = ClientData{
-		Token:     authMessage.ClientData.Token,
-		Username:  authMessage.ClientData.Username,
-		UserID:    authMessage.ClientData.UserID,
-		SessionID: authMessage.ClientData.SessionID,
+	manager.clientSocket.client = ClientData{
+		Token:     authMessage.Data.Token,
+		Username:  authMessage.Data.Username,
+		UserID:    authMessage.Data.UserID,
+		SessionID: authMessage.Data.SessionID,
 	}
 
 	if errors.Is(err, jwtUtils.ErrJWTExpired) {
-		newToken, err := jwtUtils.CreateJWT(ctx, authMessage.ClientData.Username, db)
+		newToken, err := jwtUtils.CreateJWT(ctx, authMessage.Data.Username, db)
 		if err != nil {
-			cs.sendResponse(sendChan, MessageTypeAuthFailed, nil)
+			manager.clientSocket.sendResponse(sendChan, MessageTypeAuthFailed, nil)
 			return
 		}
 
@@ -149,10 +157,10 @@ func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan c
 			Renewed: true,
 		}
 
-		cs.sendResponse(sendChan, MessageTypeAuthSuccess, data)
+		manager.clientSocket.sendResponse(sendChan, MessageTypeAuthSuccess, data)
+		manager.storeLocalConnection()
+		redisUtils.StoreSessionInRedis(manager.clientSocket.client.UserID, manager.clientSocket.client.SessionID, ctx)
 
-		cs.storeSessionInRedis(ctx)
-		cs.storeLocalConnection(authMessage.ClientData.SessionID)
 		return
 	}
 
@@ -160,9 +168,32 @@ func (cs *ClientSocket) handleAuthentication(msg []byte, db *gorm.DB, sendChan c
 		Renewed: false,
 	}
 
-	cs.sendResponse(sendChan, MessageTypeAuthSuccess, data)
-	cs.storeSessionInRedis(ctx)
-	cs.storeLocalConnection(authMessage.ClientData.SessionID)
+	manager.clientSocket.sendResponse(sendChan, MessageTypeAuthSuccess, data)
+	manager.storeLocalConnection()
+	redisUtils.StoreSessionInRedis(manager.clientSocket.client.UserID, manager.clientSocket.client.SessionID, ctx)
+}
+
+func (manager *ConnectionManager) handleJoinFile(msg []byte) {
+	var data struct {
+		FileUUID string `json:"data"`
+	}
+
+	err := json.Unmarshal(msg, &data)
+	if err != nil {
+		fmt.Println("error while unmarshall data in handleJoinFile")
+		return
+	}
+	manager.currentFileUUID = data.FileUUID
+	redisUtils.AddFileInSession(data.FileUUID, manager.clientSocket.client.SessionID, manager.clientSocket.socket.ctx)
+	manager.connections.AddSessionToDoc(data.FileUUID, manager.clientSocket.client.SessionID)
+	fmt.Println("manager.currentFileUUID: ", manager.currentFileUUID)
+}
+
+func (manager *ConnectionManager) handleExitFile() {
+	manager.DeleteSessionInDoc()
+	redisUtils.DeleteFileInSession(manager.clientSocket.client.SessionID, manager.clientSocket.socket.ctx)
+
+	fmt.Println("manager.currentFileUUID: ", manager.currentFileUUID)
 }
 
 func (cs *ClientSocket) sendResponse(sendChan chan []byte, msgType string, data interface{}) {
@@ -182,4 +213,8 @@ func (cs *ClientSocket) sendResponse(sendChan chan []byte, msgType string, data 
 	default:
 		log.Printf("Failed to send %s: channel full", msgType)
 	}
+}
+
+func FileDeleteByOwner() {
+	//TODO
 }

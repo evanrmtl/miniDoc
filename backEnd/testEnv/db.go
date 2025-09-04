@@ -26,7 +26,7 @@ func Setup() error {
 		Image:        "postgres:15",
 		ExposedPorts: []string{"5432/tcp"},
 		Env: map[string]string{
-			"POSTGRES_DB":       "testdb",
+			"POSTGRES_DB":       "testDB",
 			"POSTGRES_PASSWORD": "password",
 			"POSTGRES_USER":     "postgres",
 		},
@@ -53,7 +53,7 @@ func Setup() error {
 		return fmt.Errorf("failed to get container port: %w", err)
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=postgres password=password dbname=testdb sslmode=disable",
+	dsn := fmt.Sprintf("host=%s port=%s user=postgres password=password dbname=testDB sslmode=disable",
 		host, port.Port())
 
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -68,25 +68,33 @@ func Setup() error {
 		&models.FileMigration{},
 		&models.SessionMigration{},
 		&models.UsersFileMigration{},
+		&models.FilesContents{},
 	)
 	if err != nil {
 		log.Fatalln("error when migrating models")
 	}
 
-	err = DB.Exec("ALTER TABLE users_files ADD CONSTRAINT fk_users_files_user_id FOREIGN KEY (user_id) REFERENCES users(user_id)").Error
+	err = DB.Exec("ALTER TABLE users_files ADD CONSTRAINT fk_users_files_user_id FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE").Error
 	if err != nil {
 		log.Printf("Warning: constraint fk_users_files_user_id already exist or error while creating it : %v", err)
 	}
 
-	err = DB.Exec("ALTER TABLE users_files ADD CONSTRAINT fk_users_files_file_id FOREIGN KEY (file_id) REFERENCES files(file_id)").Error
+	err = DB.Exec("ALTER TABLE users_files ADD CONSTRAINT fk_users_files_file_uuid FOREIGN KEY (file_uuid) REFERENCES files(file_uuid) ON DELETE CASCADE").Error
 	if err != nil {
-		log.Printf("Warning: constraint fk_users_files_file_id already exist or error while creating it : %v", err)
+		log.Printf("Warning: constraint fk_users_files_file_uuid already exist or error while creating it : %v", err)
 	}
 
 	err = DB.Exec("ALTER TABLE sessions ADD CONSTRAINT fk_session_user_id FOREIGN KEY (user_id) REFERENCES users(user_id)").Error
 	if err != nil {
 		log.Printf("Warning: constraint fk_session_user_id already exist or error while creating it : %v", err)
 	}
+
+	err = DB.Exec("ALTER TABLE files_contents ADD CONSTRAINT fk_files_contents_files_uuid FOREIGN KEY (file_uuid) REFERENCES files(file_uuid) ON DELETE CASCADE").Error
+	if err != nil {
+		log.Printf("Warning: constraint fk_files_contents_files_uuid already exist or error while creating it : %v", err)
+	}
+
+	fmt.Println("Migration successful")
 
 	return nil
 }
@@ -103,6 +111,7 @@ func CleanTables() {
 		DB.Exec("TRUNCATE users_files RESTART IDENTITY CASCADE")
 		DB.Exec("TRUNCATE files RESTART IDENTITY CASCADE")
 		DB.Exec("TRUNCATE session RESTART IDENTITY CASCADE")
+		DB.Exec("TRUNCATE files_contents RESTART IDENTITY CASCADE")
 	}
 }
 
@@ -115,7 +124,7 @@ func GetDSN() string {
 	host, _ := container.Host(ctx)
 	port, _ := container.MappedPort(ctx, "5432")
 
-	return fmt.Sprintf("host=%s port=%s user=postgres password=password dbname=testdb sslmode=disable",
+	return fmt.Sprintf("host=%s port=%s user=postgres password=password dbname=testDB sslmode=disable",
 		host, port.Port())
 }
 

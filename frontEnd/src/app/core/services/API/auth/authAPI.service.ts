@@ -1,10 +1,10 @@
 import { inject, Injectable } from "@angular/core";
-import { UserState } from "../../state/userState.service";
+import { UserState } from "../../../state/userState.service";
 import { HttpClient } from "@angular/common/http";
 import { catchError, Observable, tap } from "rxjs";
 import { AuthErrorHandlerService } from "./errorHandler/AuthErrorHandler.Service";
-import { ModalState } from "../../state/modalState.service";
-import { WebSocketService } from "../websocket/websocket.service";
+import { ModalState } from "../../../state/modalState.service";
+import { WebSocketService } from "../../websocket/websocket.service";
 
 @Injectable({
     providedIn : 'root'
@@ -20,10 +20,10 @@ export class AuthService {
     constructor(private http: HttpClient) {}
 
     login(username: string, password: string): Observable<void> {
-        return this.http.post(`${this.urlServer}/login`, {username: username, password: password})
+        return this.http.post(`${this.urlServer}/v1/login`, {username: username, password: password})
             .pipe(
                 tap((res: any) => {
-                    this.handleAuthResponse(res, username);
+                    this.handleAuthResponse(res);
                     this.modalState.closeModal();
                 }),
                 catchError(error => {
@@ -33,10 +33,10 @@ export class AuthService {
     }
 
     register(username: string, password: string): Observable<void> {
-        return this.http.post(`${this.urlServer}/register`, {username: username, password: password})
+        return this.http.post(`${this.urlServer}/v1/register`, {username: username, password: password})
             .pipe(
                 tap((res: any) => {
-                    this.handleAuthResponse(res, username);
+                    this.handleAuthResponse(res);
                     this.modalState.closeModal();
                 }),
                 catchError(error => {
@@ -45,11 +45,10 @@ export class AuthService {
             );
     }
 
-    private handleAuthResponse(res: any, username: string){
+    private handleAuthResponse(res: any){
         if(res.JWT) {
             this.userState.removeToken();
             this.userState.setToken(res.JWT);
-            this.websocket.connect();
         }
     }
 }

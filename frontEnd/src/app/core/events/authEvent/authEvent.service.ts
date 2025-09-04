@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { Subject } from "rxjs";
 
 interface AuthEvent<T extends any>{
-    type: 'LOGOUT_REQUEST' | 'UNAUTHENTICATION_REQUEST' | 'AUTHENTICATION_REQUEST' | 'IS_LOGINED_IN';
+    type: 'LOGOUT_REQUEST' | 'UNAUTHENTICATION_REQUEST' | 'AUTHENTICATION_REQUEST' | 'IS_LOGINED_IN' | `WEBSOCKET_LOGOUT`;
     timestamp: number;
     data?: T;
 }

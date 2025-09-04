@@ -64,7 +64,7 @@ func createTestRoute() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	subroute.CreateWSRoute(r, testenv.DB)
+	subroute.CreateWSRoute(r.Group("/"), testenv.DB, context.Background())
 	return r
 }
 

@@ -1,6 +1,10 @@
-import { Component, createEnvironmentInjector, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RopeTree } from '../../../core/services/collaboration/RopeTree/RopeTree.service';
 import { LSEQ } from '../../../core/services/collaboration/CRDT/LSEQ.service';
+import { ActivatedRoute } from '@angular/router';
+import { WebSocketState } from '../../../core/state/websocketState.service';
+import { WebSocketService } from '../../../core/services/websocket/websocket.service';
+import { NavigateService } from '../../../core/navigation/navigation.service';
 
 @Component({
   selector: 'app-rich-text-editor',
@@ -10,14 +14,26 @@ import { LSEQ } from '../../../core/services/collaboration/CRDT/LSEQ.service';
 export class RichTextEditorComponent implements OnInit {
   public lseq : LSEQ;
   public ropeTree : RopeTree;
+  
 
-  constructor(){
+  readonly websocketState: WebSocketState = inject(WebSocketState)
+  readonly websocketService: WebSocketService = inject(WebSocketService)
+  readonly navigator: NavigateService = inject(NavigateService)
+  private file_uuid: string | null;
+
+  constructor(private route: ActivatedRoute){
     this.lseq = new LSEQ();
     this.ropeTree = new RopeTree();
+    this.file_uuid = this.route.snapshot.paramMap.get('uuid');
   }
 
   ngOnInit(): void {
-    // Initialize the rich text editor
+    this.websocketService.sendMessage("joinFile", this.file_uuid)
+    //TODO fetch fileContent
+  }
+
+  ngOnDestroy(): void {
+    this.websocketService.sendMessage("exitFile", this.file_uuid)
   }
 
   insertCharAtPosition(position: number, char: string) {
