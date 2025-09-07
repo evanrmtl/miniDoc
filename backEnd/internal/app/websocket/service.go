@@ -109,6 +109,8 @@ func (manager *ConnectionManager) handleTextMessage(msg []byte, db *gorm.DB, sen
 		manager.handleJoinFile(msg)
 	case "exitFile":
 		manager.handleExitFile()
+	case "crdt_op":
+		manager.handleCrdtOp(msg)
 	}
 }
 
@@ -215,6 +217,18 @@ func (cs *ClientSocket) sendResponse(sendChan chan []byte, msgType string, data 
 	}
 }
 
-func FileDeleteByOwner() {
-	//TODO
+func (manager *ConnectionManager) handleCrdtOp(msg []byte) {
+	var data struct {
+		Data string `json:"data"`
+	}
+	json.Unmarshal(msg, &data)
+
+	var clientAction ClientAction
+
+	json.Unmarshal([]byte(data.Data), &clientAction)
+
+	log.Println(clientAction.Operation)
+	manager.clientCRDT.mu.Lock()
+	defer manager.clientCRDT.mu.Unlock()
+	manager.clientCRDT.actionQueue = append(manager.clientCRDT.actionQueue, clientAction)
 }

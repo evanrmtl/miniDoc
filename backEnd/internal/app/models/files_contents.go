@@ -7,6 +7,7 @@ type FilesContentsMigration struct {
 	ContentsID     string `gorm:"column:content_id;type:uuid;default:gen_random_uuid();primaryKey" json:"content_id"`
 	CharacterValue []byte `gorm:"column:char_value;not null" json:"char_value"`
 	Path           []byte `gorm:"column:char_path;not null" json:"path"`
+	SessionUUID    string `gorm:"column:char_sessionuuid;not null" json:"sessionUUID"`
 	Style          uint32 `gorm:"column:char_style;not null" json:"style"`
 	Color          string `gorm:"column:color;not null" json:"color"`
 	FileUUID       string `gorm:"column:file_uuid;not null"`

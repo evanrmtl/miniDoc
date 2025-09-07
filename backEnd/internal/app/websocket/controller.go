@@ -47,12 +47,26 @@ type ClientData struct {
 	SessionID string
 }
 
+type ClientCRDT struct {
+	mu          sync.Mutex
+	actionQueue []ClientAction
+}
+
+type ClientAction struct {
+	Operation   string
+	CharValue   string
+	Path        []int
+	SessionUUID string
+	FileUUID    string
+}
+
 type ConnectionManager struct {
 	ctx             context.Context
 	cancel          context.CancelFunc
 	clientSocket    ClientSocket
 	send            chan []byte
 	connections     *SafeConnectionPool
+	clientCRDT      ClientCRDT
 	pingInterval    time.Duration
 	writeTimeout    time.Duration
 	readTimeout     time.Duration
@@ -96,6 +110,7 @@ func WebSocketHandler(c *gin.Context, db *gorm.DB, ctx context.Context) {
 		clientSocket: clientSocket,
 		send:         make(chan []byte),
 		connections:  sConnectionPool,
+		clientCRDT:   ClientCRDT{mu: sync.Mutex{}, actionQueue: make([]ClientAction, 0)},
 		pingInterval: time.Second * 30,
 		readTimeout:  time.Second * 60,
 		writeTimeout: time.Second * 10,
