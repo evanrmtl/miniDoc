@@ -4,12 +4,11 @@ import { LeafNode } from './LeafNode.service';
 import { TreeNode } from './TypeTree.service';
 import { SENT_END } from './Sentinel.service';
 import { SENT_START } from './Sentinel.service';
+import { Injectable } from '@angular/core';
 
-/**
- * RopeTree is a data structure that allows efficient text editing operations.
- * It uses a tree structure to represent text, where each leaf node contains a string,
- * and internal nodes represent concatenations of their children.
- */
+@Injectable({
+    providedIn: 'root'
+})
 export class RopeTree {
     public root: TreeNode | null = null;
 

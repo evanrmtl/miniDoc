@@ -1,0 +1,454 @@
+// Variables de couleurs
+:host {
+  --color-bg-primary: #FAFAFA;      // Blanc cassé (60%)
+  --color-bg-secondary: #DAD0FF;    // Lavande pastel (30%)
+  --color-accent: #6F42C1;          // Violet moyen (10%)
+  --color-accent-light: #B794F4;    // Violet clair
+  --color-text-primary: #212529;    // Quasi-noir
+  --color-text-secondary: #495057;  // Gris foncé
+  --color-error: #DC3545;           // Rouge erreur
+  --color-success: #28A745;         // Vert succès
+  
+  // Glassmorphism
+  --glass-bg: rgba(255, 255, 255, 0.20);
+  --glass-border: rgba(111, 66, 193, 0.1);
+  --glass-blur: blur(10px);
+  
+  display: block;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+}
+
+.app-container {
+  min-height: 100vh;
+  font-family: 'Arial', sans-serif;
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}
+
+// Navigation Bar
+.navbar {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0.75rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  &-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  &-left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  &-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: var(--color-accent);
+
+  i {
+    font-size: 1.5rem;
+  }
+}
+
+.title-input {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    background: var(--glass-bg);
+    box-shadow: 0 0 0 2px var(--color-accent-light);
+  }
+}
+
+// Buttons
+.btn-primary {
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: darken(#6F42C1, 10%);
+    transform: translateY(-1px);
+  }
+}
+
+.btn-secondary {
+  background: var(--glass-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--glass-border);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent-light);
+  }
+}
+
+.btn-icon {
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: darken(#6F42C1, 10%);
+  }
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+// Main Container
+.main-container {
+  display: grid;
+  grid-template-columns: 1fr 250px;
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+}
+
+// Toolbar
+.toolbar {
+  grid-column: 1 / -1;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+
+  &-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    &:not(:last-child)::after {
+      content: '';
+      width: 1px;
+      height: 20px;
+      background: var(--glass-border);
+      margin-left: 1.5rem;
+    }
+  }
+
+  &-btn {
+    background: transparent;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all 0.3s ease;
+    // Support pour les boutons avec icônes/texte
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 44px;
+
+    &:hover {
+      background: var(--color-bg-secondary);
+      color: var(--color-accent);
+    }
+
+    &.active {
+      background: var(--color-accent);
+      color: white;
+    }
+
+    // Style pour les lettres formatage (B, I, U, S)
+    strong, em, u, s {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    // Style pour les petits labels
+    small {
+      font-size: 0.7rem;
+      opacity: 0.8;
+      margin-top: 1px;
+    }
+
+    // Style pour les SVG
+    svg {
+      width: 16px;
+      height: 12px;
+      flex-shrink: 0;
+    }
+
+    // Style pour les spans colorés
+    span {
+      font-size: 14px;
+      font-weight: bold;
+    }
+  }
+}
+
+.font-select, .font-size {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+}
+
+// Editor Container
+.editor-container {
+  grid-column: 1;
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.document-wrapper {
+  width: 100%;
+  max-width: 816px; // Format A4
+  position: relative;
+}
+
+.document-page {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(111, 66, 193, 0.1);
+  min-height: 1056px; // Format A4
+  position: relative;
+  overflow: hidden;
+}
+
+// Votre éditeur existant intégré dans le design
+.rich-text-editor {
+  padding: 3rem;
+  min-height: 100%;
+  font-size: 12pt;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+
+  &:focus {
+    outline: none;
+  }
+
+  p {
+    margin-bottom: 1rem;
+  }
+}
+
+// Collaboration Panel
+.collaboration-panel {
+  grid-column: 2;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h3 {
+    color: var(--color-accent);
+    font-size: 1.1rem;
+  }
+}
+
+.collaborators-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.collaborator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: var(--color-bg-secondary);
+  }
+
+  &-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+  }
+
+  &-name {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+  }
+
+  &-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+
+    &.online {
+      background: var(--color-success);
+    }
+
+    &.offline {
+      background: var(--color-text-secondary);
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .main-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .collaboration-panel {
+    grid-column: 1;
+    position: static;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    &-section::after {
+      display: none;
+    }
+    
+    // Ajustement pour mobile - masquer les labels
+    &-btn small {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    &-content {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    &-left, &-right {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+
+  .rich-text-editor {
+    padding: 1.5rem;
+  }
+
+  .toolbar {
+    padding: 0.75rem;
+    
+    &-section {
+      gap: 0.25rem;
+    }
+
+    // Boutons plus compacts sur mobile
+    &-btn {
+      min-width: 36px;
+      padding: 0.4rem;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.document-page {
+  animation: fadeIn 0.5s ease-out;
+}
+
+// Glassmorphism hover effects
+.toolbar, .navbar, .collaboration-panel, .document-page {
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: var(--color-accent-light);
+    box-shadow: 0 8px 32px rgba(111, 66, 193, 0.15);
+  }
+}

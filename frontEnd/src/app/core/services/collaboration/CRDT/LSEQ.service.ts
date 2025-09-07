@@ -1,13 +1,18 @@
 import { LseqIdentifier } from './LseqIdentifier.service';
 import { LseqAtom } from './LseqAtom.service';
 import { SENT_END, SENT_START } from '../RopeTree/Sentinel.service';
+import { inject, Injectable } from '@angular/core';
+import { WebSocketState } from '../../../state/websocketState.service';
 
-
+@Injectable({
+    providedIn: 'root'
+})
 export class LSEQ {
 
     public bpbm: Map<number, boolean>;
     public boundary: number = 1000;
     public atoms: LseqAtom[] = [];
+    private websocketState: WebSocketState = inject(WebSocketState)
 
 
     constructor() {
@@ -74,7 +79,7 @@ export class LSEQ {
             throw new Error("Invalid path generated");
         }
 
-        return new LseqIdentifier(newDigits, 'client-id');
+        return new LseqIdentifier(newDigits, this.websocketState.sessionUUID());
     }
 
     prefix(id : number[], depth: number, pushValue : number): number[]{

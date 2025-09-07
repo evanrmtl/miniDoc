@@ -1,4 +1,205 @@
-<div contenteditable="true" class="rich-text-editor" (keypress)="onInput($event)" (keydown)="onKeyInput($event)">
+<div class="app-container">
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-left"> <!-- TODO navigate to homePage on (click) -->
+                <div class="logo">
+                    <i class="fas fa-file-text"></i>
+                    <span>miniDoc</span> 
+                </div>
+                <div class="document-title">
+                    <input type="text" class="title-input" placeholder="Document sans titre" /> <!-- TODO Edit title (CRDT?)-->
+                </div>
+            </div>
 
+            <div class="navbar-right">
 
+                <button class="btn-primary" title="Partager le document">
+                    <i class="fas fa-share-alt"></i>
+                    Partager
+                </button>
+                <div class="user-menu" title="Menu utilisateur">
+                    <p><!-- TODO -->username</p>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Toolbar -->
+        <div class="toolbar">
+
+            <!-- TODO -->
+             <!-- TODO -->
+              <!-- TODO -->
+               <!-- TODO -->
+                <!-- TODO -->
+                 <!-- TODO -->
+                  <!-- TODO -->
+            <!-- MAKE ALL BUTTONS AVAILABLE  -->
+            <div class="toolbar-section">
+                <select class="font-select" title="Choisir la police">
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Georgia">Georgia</option>
+                </select>
+                <select class="font-size" title="Taille de la police">
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12" selected>12</option>
+                    <option value="14">14</option>
+                    <option value="16">16</option>
+                    <option value="18">18</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+
+            <div class="toolbar-section">
+                <button class="toolbar-btn" title="Gras (Ctrl+B)">
+                    <strong>B</strong>
+                    <small>Gras</small>
+                </button>
+                <button class="toolbar-btn" title="Italique (Ctrl+I)">
+                    <em>I</em>
+                    <small>Italique</small>
+                </button>
+                <button class="toolbar-btn" title="Souligné (Ctrl+U)">
+                    <u>U</u>
+                    <small>Souligné</small>
+                </button>
+                <button class="toolbar-btn" title="Texte barré">
+                    <s>S</s>
+                    <small>Barré</small>
+                </button>
+            </div>
+
+            <div class="toolbar-section">
+                <button class="toolbar-btn" title="Couleur du texte">
+                    <span style="color: #6f42c1">A</span>
+                    <small>Couleur</small>
+                </button>
+                <button class="toolbar-btn" title="Surligner le texte">
+                    <span style="background: #ffff00; padding: 2px">A</span>
+                    <small>Surligner</small>
+                </button>
+            </div>
+
+            <div class="toolbar-section">
+                <button class="toolbar-btn active" title="Aligner à gauche">
+                    <svg width="16" height="12" viewBox="0 0 16 12">
+                        <rect x="0" y="1" width="12" height="1" fill="currentColor" />
+                        <rect x="0" y="4" width="16" height="1" fill="currentColor" />
+                        <rect x="0" y="7" width="10" height="1" fill="currentColor" />
+                        <rect x="0" y="10" width="14" height="1" fill="currentColor" />
+                    </svg>
+                    <small>Gauche</small>
+                </button>
+                <button class="toolbar-btn" title="Centrer">
+                    <svg width="16" height="12" viewBox="0 0 16 12">
+                        <rect x="2" y="1" width="12" height="1" fill="currentColor" />
+                        <rect x="0" y="4" width="16" height="1" fill="currentColor" />
+                        <rect x="3" y="7" width="10" height="1" fill="currentColor" />
+                        <rect x="1" y="10" width="14" height="1" fill="currentColor" />
+                    </svg>
+                    <small>Centré</small>
+                </button>
+                <button class="toolbar-btn" title="Aligner à droite">
+                    <svg width="16" height="12" viewBox="0 0 16 12">
+                        <rect x="4" y="1" width="12" height="1" fill="currentColor" />
+                        <rect x="0" y="4" width="16" height="1" fill="currentColor" />
+                        <rect x="6" y="7" width="10" height="1" fill="currentColor" />
+                        <rect x="2" y="10" width="14" height="1" fill="currentColor" />
+                    </svg>
+                    <small>Droite</small>
+                </button>
+                <button class="toolbar-btn" title="Justifier">
+                    <svg width="16" height="12" viewBox="0 0 16 12">
+                        <rect x="0" y="1" width="16" height="1" fill="currentColor" />
+                        <rect x="0" y="4" width="16" height="1" fill="currentColor" />
+                        <rect x="0" y="7" width="16" height="1" fill="currentColor" />
+                        <rect x="0" y="10" width="16" height="1" fill="currentColor" />
+                    </svg>
+                    <small>Justifié</small>
+                </button>
+            </div>
+
+            <div class="toolbar-section">
+                <button class="toolbar-btn" title="Liste à puces">
+                    <svg width="16" height="12" viewBox="0 0 16 12">
+                        <circle cx="2" cy="2" r="1" fill="currentColor" />
+                        <rect x="5" y="1.5" width="9" height="1" fill="currentColor" />
+                        <circle cx="2" cy="6" r="1" fill="currentColor" />
+                        <rect x="5" y="5.5" width="9" height="1" fill="currentColor" />
+                        <circle cx="2" cy="10" r="1" fill="currentColor" />
+                        <rect x="5" y="9.5" width="9" height="1" fill="currentColor" />
+                    </svg>
+                    <small>Puces</small>
+                </button>
+                <button class="toolbar-btn" title="Liste numérotée">
+                    <svg width="16" height="12" viewBox="0 0 16 12">
+                        <text x="1" y="3" font-size="3" fill="currentColor">1.</text>
+                        <rect x="5" y="1.5" width="9" height="1" fill="currentColor" />
+                        <text x="1" y="7" font-size="3" fill="currentColor">2.</text>
+                        <rect x="5" y="5.5" width="9" height="1" fill="currentColor" />
+                        <text x="1" y="11" font-size="3" fill="currentColor">3.</text>
+                        <rect x="5" y="9.5" width="9" height="1" fill="currentColor" />
+                    </svg>
+                    <small>Numérotée</small>
+                </button>
+            </div>
+        </div>
+
+        <!-- Editor Container -->
+        <div class="editor-container">
+            <div class="document-wrapper">
+                <div class="document-page">
+                    <!-- Votre éditeur existant intégré dans le design glassmorphism -->
+                    <div contenteditable="true" spellcheck="true" aria-label="Éditeur de texte principal"
+                        class="rich-text-editor" (input)="onInput($event)" (keydown)="onKeyInput($event)" #editor>
+                        <p><strong>Bienvenue dans DocCollab !</strong></p>
+                        <p>
+                            Commencez à écrire votre document ici. Utilisez la barre d'outils
+                            pour :
+                        </p>
+                        <ul>
+                            <li>
+                                Mettre en <strong>gras</strong>, <em>italique</em> ou
+                                <u>souligné</u>
+                            </li>
+                            <li>Créer des listes et aligner votre texte</li>
+                            <li>Insérer des liens et des images</li>
+                        </ul>
+                        <p>Collaborez en temps réel avec votre équipe !</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collaboration Panel -->
+         <!-- TODO Make it Angular responsive-->
+        <div class="collaboration-panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-users"></i> Collaborators (3)</h3>
+                <button class="btn-icon" title="Inviter des collaborateurs">
+                    <i class="fas fa-user-plus"></i>
+                </button>
+            </div>
+            <div class="collaborators-list">
+                <div class="collaborator">
+                    <span class="collaborator-name">Vous (Propriétaire)</span>
+                    <div class="collaborator-status online" title="En ligne"></div>
+                </div>
+                <div class="collaborator">
+                    <span class="collaborator-name">Marie Dupont</span>
+                    <div class="collaborator-status online" title="En ligne - En train d'éditer"></div>
+                </div>
+                <div class="collaborator">
+                    <span class="collaborator-name">Jean Martin</span>
+                    <div class="collaborator-status offline" title="Hors ligne"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
