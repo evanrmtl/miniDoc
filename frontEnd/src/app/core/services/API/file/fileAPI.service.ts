@@ -5,6 +5,7 @@ import { UserState } from "../../../state/userState.service";
 import { FileErrorHandlerService } from "./errorHandler/FileErrorHandler.service";
 import { NavigateService } from "../../../navigation/navigation.service";
 import { WebSocketService } from "../../websocket/websocket.service";
+import { WebSocketState } from "../../../state/websocketState.service";
 
 export interface File{
   fileUUID: string,
@@ -27,6 +28,7 @@ export class FileServiceAPI {
     readonly errorHandler: FileErrorHandlerService = inject(FileErrorHandlerService)
     readonly navigator: NavigateService = inject(NavigateService)
     readonly websocketService: WebSocketService = inject(WebSocketService)
+    readonly websocketState: WebSocketState = inject(WebSocketState)
 
     constructor(private http: HttpClient) {}
 
@@ -37,7 +39,7 @@ export class FileServiceAPI {
         }
         const retryWithSameUuid = () => this.create(fileUUID);
         return this.http.post(`${this.urlServer}/v1/file/create`, 
-            { file_uuid: fileUUID, session_uuid: this.websocketService.sessionUUID }, 
+            { file_uuid: fileUUID, session_uuid: this.websocketState.sessionUUID() }, 
             { headers: new HttpHeaders().set("Authorization", `Bearer ${token}`)
         })
             .pipe(
@@ -58,7 +60,7 @@ export class FileServiceAPI {
         const retryWithSameUuid = () => this.delete(fileUUID);
         return this.http.delete(`${this.urlServer}/v1/file/delete`, { 
             headers: new HttpHeaders().set("Authorization", `Bearer ${token}`), 
-            params: { file_uuid: fileUUID, session_uuid: this.websocketService.sessionUUID }
+            params: { file_uuid: fileUUID, session_uuid: this.websocketState.sessionUUID() }
         })
             .pipe(
                 catchError(error => {

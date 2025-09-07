@@ -6,7 +6,6 @@ import { Token, TokenService } from "../token/token.service";
 import { NavigateService } from "../../navigation/navigation.service";
 import { BehaviorSubject, Observable, range } from "rxjs";
 import { NotificationService } from "../notification/notification.service";
-import { not } from "rxjs/internal/util/not";
 
 interface Message{
     type: string;
@@ -57,8 +56,6 @@ export class WebSocketService {
     private maxAutoReconnect: number = 4;
 
     private fileNotifications = new BehaviorSubject<FileNotification | null>(null);
-
-    public sessionUUID = crypto.randomUUID();
 
     connect(): void {
 
@@ -121,7 +118,7 @@ export class WebSocketService {
         const token = this.tokenService.getToken();
         const username = this.tokenService.getParsedToken()?.username;
         const userID = this.tokenService.getParsedToken()?.userId;
-        const sessionID = this.sessionUUID
+        const sessionID = this.websocketState.sessionUUID()
         
         if (token && username) {
             this.socket.send(JSON.stringify({
@@ -223,6 +220,7 @@ export class WebSocketService {
                     return;
                 } else if (attempts >= this.maxAutoReconnect) {
                     this.errorHandler.handleWebSocketError("Automatic reconnection failed. Please check your connection and try again.");
+                    this.websocketState.resetSession()
                     resolve(false);
                     return;
                 }
